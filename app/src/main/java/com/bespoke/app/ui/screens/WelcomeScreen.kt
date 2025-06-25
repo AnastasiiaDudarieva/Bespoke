@@ -30,10 +30,12 @@ import com.bespoke.app.ui.components.auth.Greeting
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.models.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeBlue
+import com.bespoke.app.viewmodel.AuthViewModel
 
 @Preview(showBackground = false)
 @Composable
-fun WelcomeScreen() {
+fun WelcomeScreen(viewModel: AuthViewModel,
+                  onLoginSuccess: () -> Unit) {
     var panelState by remember { mutableStateOf<BottomPanelContent>(BottomPanelContent.Welcome) }
 
     Box(modifier = Modifier
@@ -84,7 +86,9 @@ fun WelcomeScreen() {
                 Spacer(modifier = Modifier.height(32.dp))
                 BottomPanel(
                     state = panelState,
-                    onChangeState = { panelState = it }
+                    onChangeState = { panelState = it },
+                   viewModel = viewModel,
+                   onLoginSuccess = onLoginSuccess
                 )
             }
         }

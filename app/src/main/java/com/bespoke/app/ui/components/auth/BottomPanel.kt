@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -29,11 +31,15 @@ import com.bespoke.app.ui.components.base.BespokeInput
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText
 import com.bespoke.app.ui.models.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeButtonCancelColors
+import com.bespoke.app.viewmodel.AuthState
+import com.bespoke.app.viewmodel.AuthViewModel
 
 @Composable
 fun BottomPanel(
     state: BottomPanelContent,
     onChangeState: (BottomPanelContent) -> Unit,
+    viewModel: AuthViewModel,
+    onLoginSuccess: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -106,7 +112,7 @@ fun BottomPanel(
                 }
 
                 BespokeButton(
-                    onClick = { /* TODO: */ },
+                    onClick = { viewModel.login(email, password)},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(88.dp),
@@ -169,6 +175,14 @@ fun BottomPanel(
                     }
 
                 }
+            }
+        }
+
+        val authState by viewModel.authState.collectAsState()
+
+        LaunchedEffect(authState) {
+            if (authState is AuthState.Success) {
+                onLoginSuccess()
             }
         }
     }

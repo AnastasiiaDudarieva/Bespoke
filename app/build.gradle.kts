@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
 }
 
 val versionMajor = (project.findProperty("versionMajor") as String).toInt()
@@ -80,7 +81,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "2.1.0"
     }
 
     packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -98,8 +99,13 @@ dependencies {
     implementation(libs.androidx.icons)
 
     implementation(platform(libs.firebase.bom))
-    // implementation(libs.google.firebase.auth.ktx)
-    // implementation(libs.google.firebase.firestore.ktx)
+    implementation(libs.firebase.auth)
+//    implementation(libs.androidx.navigation.compose.jvmstubs)
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
