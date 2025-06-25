@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_title">Welcome!</string>
+    <string name="welcome_subtitle">Log in to get started with Bespoke.</string>
+    <string name="login_button">Log In</string>
+    <string name="request_invite">Request Invite</string>
+    <string name="login_title">Let’s get started!</string>
+    <string name="login_subtitle">Enter your login information below.</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="submit">Submit</string>
+    <string name="invite_title">Request invite!</string>
+    <string name="invite_subtitle">Enter your email below.</string>
+    <string name="email_hint">Enter your Email</string>
+    <string name="password_hint">Enter your Password</string>
+    <string name="forgot_password_title">Forget your password!</string>
+</resources>
