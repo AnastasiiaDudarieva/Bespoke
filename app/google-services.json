@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "389817372895",
+    "project_id": "baseline-stage-d495b",
+    "storage_bucket": "baseline-stage-d495b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:389817372895:android:21501dc66993892d49996a",
+        "android_client_info": {
+          "package_name": "com.bespoke.app.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ6f0XpLY1kuSfZzvki4m_m1zSiNTKVUw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

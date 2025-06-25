@@ -1,6 +1,30 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.google.gms.google-services")
+}
+
+val versionMajor = (project.findProperty("versionMajor") as String).toInt()
+val versionMinor = (project.findProperty("versionMinor") as String).toInt()
+val versionPatch = (project.findProperty("versionPatch") as String).toInt()
+val versionBuild = (project.findProperty("versionBuild") as String).toInt()
+
+fun computeVersionCode(): Int {
+    return versionMajor * 1_000_000 + versionMinor * 10_000 + versionPatch * 100 + versionBuild
+}
+
+fun computeVersionName(): String {
+    return "$versionMajor.$versionMinor.$versionPatch"
+}
+
+fun getDate(): String {
+    val df = SimpleDateFormat("yyyy-MM-dd")
+    df.timeZone = TimeZone.getTimeZone("UTC")
+    return df.format(Date())
 }
 
 android {
@@ -11,24 +35,38 @@ android {
         applicationId = "com.bespoke.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = computeVersionCode()
+        versionName = computeVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
-        release {
+        release{
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            isDebuggable = true
+        }
     }
+
+    applicationVariants.all {
+        outputs.all {
+            val appName = when (buildType.name) {
+                "release" -> "Bespoke_v.${versionName}_${getDate()}.apk"
+                else -> "Bespoke_${buildType.name}.apk"
+            }
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = appName
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -36,17 +74,16 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
     buildFeatures {
         compose = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
+
+    packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
 }
 
 dependencies {
@@ -58,7 +95,11 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation ("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation(libs.androidx.icons)
+
+    implementation(platform(libs.firebase.bom))
+    // implementation(libs.google.firebase.auth.ktx)
+    // implementation(libs.google.firebase.firestore.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
