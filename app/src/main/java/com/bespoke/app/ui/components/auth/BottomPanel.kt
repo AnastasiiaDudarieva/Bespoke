@@ -39,6 +39,7 @@ fun BottomPanel(
     state: BottomPanelContent,
     onChangeState: (BottomPanelContent) -> Unit,
     viewModel: AuthViewModel,
+    imeVisible: Boolean
 ) {
 
     Column(
@@ -125,14 +126,12 @@ fun BottomPanel(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f, fill = true),
-                    contentAlignment = Alignment.Center
+                        .weight(1f, fill = true)
                 ) {
-                    Column(
+                    CenteredWhenKeyboardHidden(
                         modifier = Modifier
-                            .padding(horizontal = 24.dp, vertical = 32.dp)
                             .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        imeVisible = imeVisible
                     ) {
                         BespokeInput(
                             value = emailRequest,

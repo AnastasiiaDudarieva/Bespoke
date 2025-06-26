@@ -22,9 +22,7 @@ import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 
 @Composable
-fun Greeting(state: BottomPanelContent, modifier: Modifier = Modifier) {
-    val view = LocalView.current
-    val imeVisible = rememberImeVisibility(view)
+fun Greeting(state: BottomPanelContent, modifier: Modifier = Modifier, imeVisible: Boolean) {
 
     if (!imeVisible) {
         val title: Int

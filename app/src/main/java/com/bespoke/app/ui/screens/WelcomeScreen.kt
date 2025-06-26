@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,7 @@ import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.data.viewmodel.AuthViewModel
+import com.bespoke.app.ui.components.auth.rememberImeVisibility
 
 @Composable
 fun WelcomeScreen(
@@ -47,6 +49,8 @@ fun WelcomeScreen(
     var panelState by remember { mutableStateOf<BottomPanelContent>(BottomPanelContent.Welcome) }
     val authState by viewModel.authState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val view = LocalView.current
+    val imeVisible = rememberImeVisibility(view)
 
 
     Box(
@@ -96,13 +100,15 @@ fun WelcomeScreen(
 
                 Greeting(
                     state = panelState,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                    imeVisible = imeVisible
                 )
                 Spacer(modifier = Modifier.height(32.dp))
                 BottomPanel(
                     state = panelState,
                     onChangeState = { panelState = it },
                     viewModel = viewModel,
+                    imeVisible = imeVisible
                 )
             }
         }
