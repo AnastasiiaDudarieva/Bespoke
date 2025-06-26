@@ -55,7 +55,6 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _authState.value = AuthState.Message("Check your email")
-                    _authState.value = AuthState.Idle
                 } else {
                     _authState.value =
                         AuthState.Error(task.exception?.localizedMessage ?: "Unknown error")
