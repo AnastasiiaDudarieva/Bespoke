@@ -3,6 +3,7 @@ package com.bespoke.app.di
 import com.bespoke.app.BuildConfig
 import com.bespoke.app.data.services.FirebaseService
 import com.bespoke.app.data.LoggingInterceptor
+import com.google.firebase.auth.FirebaseAuth
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -45,5 +46,9 @@ object AppModule {
     fun provideFirebaseService(retrofit: Retrofit): FirebaseService {
         return retrofit.create(FirebaseService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
 }
