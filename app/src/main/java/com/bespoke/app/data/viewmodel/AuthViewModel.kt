@@ -2,17 +2,19 @@ package com.bespoke.app.data.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bespoke.app.data.FirebaseRepository
+import com.bespoke.app.data.repository.FirebaseRepository
 import com.bespoke.app.ui.models.auth.AuthState
 import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(private val firebaseRepository: FirebaseRepository) :
+    ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firebaseRepository: FirebaseRepository = FirebaseRepository()
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
 
@@ -70,17 +72,13 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             val result = firebaseRepository.requestInvite(email)
-            result
-                .onSuccess { (success, message) ->
-                    if (success) {
-                        _authState.value = AuthState.Idle
-                    } else {
-                        _authState.value = AuthState.Error(message ?: "Unknown error")
-                    }
+            if (result.status) {
+                result.message?.let {
+                    _authState.value = AuthState.Message(it)
                 }
-                .onFailure {
-                    _authState.value = AuthState.Error(it.message ?: "Unknown error")
-                }
+            } else {
+                _authState.value = AuthState.Error(result.errorMessage ?: "Unknown error")
+            }
         }
     }
 }
