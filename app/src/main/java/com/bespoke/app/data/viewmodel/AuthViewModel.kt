@@ -1,14 +1,18 @@
-package com.bespoke.app.viewmodel
+package com.bespoke.app.data.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bespoke.app.data.FirebaseRepository
 import com.bespoke.app.ui.models.AuthState
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firebaseRepository: FirebaseRepository = FirebaseRepository()
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
 
@@ -60,5 +64,23 @@ class AuthViewModel : ViewModel() {
                         AuthState.Error(task.exception?.localizedMessage ?: "Unknown error")
                 }
             }
+    }
+
+    fun requestInvite(email: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            val result = firebaseRepository.requestInvite(email)
+            result
+                .onSuccess { (success, message) ->
+                    if (success) {
+                        _authState.value = AuthState.Idle
+                    } else {
+                        _authState.value = AuthState.Error(message ?: "Unknown error")
+                    }
+                }
+                .onFailure {
+                    _authState.value = AuthState.Error(it.message ?: "Unknown error")
+                }
+        }
     }
 }

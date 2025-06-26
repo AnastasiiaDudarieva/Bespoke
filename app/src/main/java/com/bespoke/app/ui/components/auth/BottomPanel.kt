@@ -35,7 +35,7 @@ import com.bespoke.app.ui.components.base.ClickableUnderlinedText
 import com.bespoke.app.ui.models.AuthState
 import com.bespoke.app.ui.models.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeButtonCancelColors
-import com.bespoke.app.viewmodel.AuthViewModel
+import com.bespoke.app.data.viewmodel.AuthViewModel
 
 @Composable
 fun BottomPanel(
@@ -168,7 +168,9 @@ fun BottomPanel(
                             BespokeButton(
                                 onClick = {
                                     if (state == BottomPanelContent.RequestInvite)
-                                    //TODO: Add invite logic
+                                        viewModel.requestInvite(
+                                            email = emailRequest
+                                        )
                                     else
                                         viewModel.resetPassword(
                                             email = emailRequest
@@ -194,6 +196,8 @@ fun BottomPanel(
                 is AuthState.Message -> {
                     if (state == BottomPanelContent.ForgotPassword) {
                         onChangeState(BottomPanelContent.Login)
+                    }else if (state == BottomPanelContent.RequestInvite) {
+                        onChangeState(BottomPanelContent.Welcome)
                     }
                 }
                 else -> {}

@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bespoke.app.ui.components.base.BespokeButton
-import com.bespoke.app.viewmodel.AuthViewModel
+import com.bespoke.app.data.viewmodel.AuthViewModel
 
 @Composable
 fun HomeScreen(

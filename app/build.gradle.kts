@@ -50,11 +50,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "ENDPOINT", "\"${property("PRODUCTION_ENDPOINT")}\"")
         }
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             isDebuggable = true
+            buildConfigField("String", "ENDPOINT", "\"${property("DEV_ENDPOINT")}\"")
         }
     }
 
@@ -78,6 +80,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig=true
     }
 
     composeOptions {
@@ -104,7 +107,12 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-
+    // Retrofit
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.okhttp)
+    implementation (libs.logging.interceptor)
+    implementation (libs.retrofit2.kotlin.coroutines.adapter)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

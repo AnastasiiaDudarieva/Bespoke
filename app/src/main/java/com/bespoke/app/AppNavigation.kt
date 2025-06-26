@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.ui.models.AuthState
 import com.bespoke.app.ui.screens.HomeScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
-import com.bespoke.app.viewmodel.AuthViewModel
+import com.bespoke.app.data.viewmodel.AuthViewModel
 
 @Composable
 fun AppNavigation() {
