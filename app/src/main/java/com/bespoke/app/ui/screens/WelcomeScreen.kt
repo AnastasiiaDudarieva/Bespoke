@@ -9,38 +9,51 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bespoke.app.R
 import com.bespoke.app.ui.components.auth.BottomPanel
 import com.bespoke.app.ui.components.auth.Greeting
 import com.bespoke.app.ui.components.base.BespokeTopBar
+import com.bespoke.app.ui.models.AuthState
 import com.bespoke.app.ui.models.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.viewmodel.AuthViewModel
 
-@Preview(showBackground = false)
 @Composable
-fun WelcomeScreen(viewModel: AuthViewModel,
-                  onLoginSuccess: () -> Unit) {
+fun WelcomeScreen(
+    viewModel: AuthViewModel,
+) {
     var panelState by remember { mutableStateOf<BottomPanelContent>(BottomPanelContent.Welcome) }
+    val authState by viewModel.authState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(BespokeBlue)) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BespokeBlue)
+    ) {
+
         Image(
             painter = painterResource(id = R.drawable.line_variants),
             contentDescription = null,
@@ -87,10 +100,48 @@ fun WelcomeScreen(viewModel: AuthViewModel,
                 BottomPanel(
                     state = panelState,
                     onChangeState = { panelState = it },
-                   viewModel = viewModel,
-                   onLoginSuccess = onLoginSuccess
+                    viewModel = viewModel,
                 )
             }
         }
+
+        if (authState is AuthState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
+
+
+        val authState by viewModel.authState.collectAsState()
+
+        LaunchedEffect(authState) {
+            when (authState) {
+                is AuthState.Error,
+                    -> {
+                    snackbarHostState.showSnackbar((authState as AuthState.Error).message)
+                }
+
+                is AuthState.Message,
+                    -> {
+                    snackbarHostState.showSnackbar((authState as AuthState.Message).message)
+                }
+
+                else -> {}
+            }
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 32.dp)
+                .fillMaxWidth()
+        )
     }
+
 }
+

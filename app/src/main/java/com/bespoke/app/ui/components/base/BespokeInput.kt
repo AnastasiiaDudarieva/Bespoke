@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
+import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.theme.White
 
 @Composable
@@ -64,7 +65,9 @@ fun BespokeInput(
             focusedLabelColor = BespokeBlue,
             unfocusedContainerColor = White,
             focusedContainerColor = White,
-            cursorColor = BespokeBlue
+            cursorColor = BespokeBlue,
+            focusedTextColor = TextDark,
+            unfocusedTextColor = TextDark
         )
     )
 }

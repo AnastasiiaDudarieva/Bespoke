@@ -34,7 +34,7 @@ android {
 
     defaultConfig {
         applicationId = "com.bespoke.app"
-        minSdk = 26
+        minSdk = 31
         targetSdk = 35
         versionCode = computeVersionCode()
         versionName = computeVersionName()
@@ -100,7 +100,6 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-//    implementation(libs.androidx.navigation.compose.jvmstubs)
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")

@@ -21,7 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -29,9 +31,9 @@ import com.bespoke.app.R
 import com.bespoke.app.ui.components.base.BespokeButton
 import com.bespoke.app.ui.components.base.BespokeInput
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText
+import com.bespoke.app.ui.models.AuthState
 import com.bespoke.app.ui.models.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeButtonCancelColors
-import com.bespoke.app.viewmodel.AuthState
 import com.bespoke.app.viewmodel.AuthViewModel
 
 @Composable
@@ -39,8 +41,9 @@ fun BottomPanel(
     state: BottomPanelContent,
     onChangeState: (BottomPanelContent) -> Unit,
     viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -59,9 +62,7 @@ fun BottomPanel(
                         .fillMaxWidth()
                 ) {
                     BespokeButton(
-                        onClick = {
-                            onChangeState(BottomPanelContent.Login)
-                        },
+                        onClick = { onChangeState(BottomPanelContent.Login) },
                         modifier = Modifier.fillMaxWidth(),
                         text = stringResource(R.string.login_button)
                     )
@@ -74,6 +75,7 @@ fun BottomPanel(
             }
 
             BottomPanelContent.Login -> {
+
                 Column(
                     modifier = Modifier
                         .weight(1f, fill = true)
@@ -86,7 +88,8 @@ fun BottomPanel(
                         onValueChange = { email = it },
                         label = stringResource(R.string.email_hint),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Email
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
                         )
                     )
                     Spacer(modifier = Modifier.height(32.dp))
@@ -95,16 +98,15 @@ fun BottomPanel(
                         onValueChange = { password = it },
                         label = stringResource(R.string.password_hint),
                         keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Password
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
                         ),
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 24.dp)
                     )
-
                     Spacer(modifier = Modifier.height(32.dp))
-
                     ClickableUnderlinedText(
                         text = stringResource(R.string.forgot_password),
                         onClick = { onChangeState(BottomPanelContent.ForgotPassword) }
@@ -112,7 +114,7 @@ fun BottomPanel(
                 }
 
                 BespokeButton(
-                    onClick = { viewModel.login(email, password)},
+                    onClick = { viewModel.login(email, password) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(88.dp),
@@ -123,6 +125,7 @@ fun BottomPanel(
             BottomPanelContent.RequestInvite,
             BottomPanelContent.ForgotPassword,
                 -> {
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -140,7 +143,8 @@ fun BottomPanel(
                             onValueChange = { emailRequest = it },
                             label = stringResource(R.string.email_hint),
                             keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Email
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Done
                             )
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +167,14 @@ fun BottomPanel(
                             )
 
                             BespokeButton(
-                                onClick = { /*TODO*/ },
+                                onClick = {
+                                    if (state == BottomPanelContent.RequestInvite)
+                                    //TODO: Add invite logic
+                                    else
+                                        viewModel.resetPassword(
+                                            email = emailRequest
+                                        )
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f)
@@ -173,7 +184,6 @@ fun BottomPanel(
                             )
                         }
                     }
-
                 }
             }
         }
@@ -181,11 +191,14 @@ fun BottomPanel(
         val authState by viewModel.authState.collectAsState()
 
         LaunchedEffect(authState) {
-            if (authState is AuthState.Success) {
-                onLoginSuccess()
+            when (authState) {
+                is AuthState.Success -> {
+                    if (state == BottomPanelContent.ForgotPassword) {
+                        onChangeState(BottomPanelContent.Login)
+                    }
+                }
+                else -> {}
             }
         }
     }
-
 }
-

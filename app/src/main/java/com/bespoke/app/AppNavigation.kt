@@ -8,42 +8,46 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.bespoke.app.ui.models.AuthState
 import com.bespoke.app.ui.screens.HomeScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
-import com.bespoke.app.viewmodel.AuthState
 import com.bespoke.app.viewmodel.AuthViewModel
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val viewModel: AuthViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
 
-    val authState by viewModel.authState.collectAsState()
+    NavHost(navController = navController, startDestination = "welcome") {
 
-    LaunchedEffect(Unit) {
-        viewModel.checkIfLoggedIn()
+        composable("welcome") {
+            WelcomeScreen(
+                viewModel = authViewModel
+            )
+        }
+
+        composable("home") {
+            HomeScreen(
+                viewModel = authViewModel,
+                onLogout = {
+                    navController.navigate("welcome") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 
-    when (authState) {
-        is AuthState.Success -> {
-            NavHost(navController = navController, startDestination = "home") {
-                composable("home") { HomeScreen() }
-            }
-        }
-        else -> {
-            NavHost(navController = navController, startDestination = "welcome") {
-                composable("welcome") {
-                    WelcomeScreen(
-                        onLoginSuccess = {
-                            navController.navigate("home") {
-                                popUpTo("welcome") { inclusive = true }
-                            }
-                        },
-                        viewModel = viewModel
-                    )
+    val authState by authViewModel.authState.collectAsState()
+
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Success -> {
+                navController.navigate("home") {
+                    popUpTo("welcome") { inclusive = true }
                 }
-                composable("home") { HomeScreen() }
             }
+            else -> {}
         }
     }
 }
