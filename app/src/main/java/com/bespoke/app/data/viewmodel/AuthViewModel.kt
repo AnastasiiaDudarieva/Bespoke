@@ -3,7 +3,7 @@ package com.bespoke.app.data.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.FirebaseRepository
-import com.bespoke.app.ui.models.AuthState
+import com.bespoke.app.ui.models.auth.AuthState
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

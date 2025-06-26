@@ -35,8 +35,8 @@ import com.bespoke.app.R
 import com.bespoke.app.ui.components.auth.BottomPanel
 import com.bespoke.app.ui.components.auth.Greeting
 import com.bespoke.app.ui.components.base.BespokeTopBar
-import com.bespoke.app.ui.models.AuthState
-import com.bespoke.app.ui.models.BottomPanelContent
+import com.bespoke.app.ui.models.auth.AuthState
+import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.data.viewmodel.AuthViewModel
 

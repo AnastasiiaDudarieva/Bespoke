@@ -1,10 +1,7 @@
 package com.bespoke.app
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class BespokeApp : Application() {
-    override fun onCreate() {
-        super.onCreate()
-//        FirebaseApp.initializeApp(this)
-    }
-}
+@HiltAndroidApp
+class BespokeApp : Application()

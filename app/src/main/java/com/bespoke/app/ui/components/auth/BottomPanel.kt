@@ -1,16 +1,13 @@
 package com.bespoke.app.ui.components.auth
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -32,8 +29,8 @@ import com.bespoke.app.R
 import com.bespoke.app.ui.components.base.BespokeButton
 import com.bespoke.app.ui.components.base.BespokeInput
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText
-import com.bespoke.app.ui.models.AuthState
-import com.bespoke.app.ui.models.BottomPanelContent
+import com.bespoke.app.ui.models.auth.AuthState
+import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeButtonCancelColors
 import com.bespoke.app.data.viewmodel.AuthViewModel
 

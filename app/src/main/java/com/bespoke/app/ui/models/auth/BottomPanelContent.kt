@@ -1,4 +1,4 @@
-package com.bespoke.app.ui.models
+package com.bespoke.app.ui.models.auth
 
 sealed class BottomPanelContent {
      object Welcome : BottomPanelContent()

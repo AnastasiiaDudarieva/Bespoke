@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 val versionMajor = (project.findProperty("versionMajor") as String).toInt()
@@ -107,12 +109,16 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
+    implementation("com.google.dagger:hilt-android:2.56.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.56.2")
+
     // Retrofit
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.okhttp)
     implementation (libs.logging.interceptor)
     implementation (libs.retrofit2.kotlin.coroutines.adapter)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
