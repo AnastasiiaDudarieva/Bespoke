@@ -12,42 +12,54 @@ import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.screens.HomeScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
 import com.bespoke.app.data.viewmodel.AuthViewModel
-
+import com.bespoke.app.ui.screens.MemberRootScreen
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
 
-    NavHost(navController = navController, startDestination = "welcome") {
-
-        composable("welcome") {
-            WelcomeScreen(
-                viewModel = authViewModel
-            )
-        }
-
-        composable("home") {
-            HomeScreen(
-                viewModel = authViewModel,
-                onLogout = {
-                    navController.navigate("welcome") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                }
-            )
-        }
-    }
-
     val authState by authViewModel.authState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        authViewModel.checkIfLoggedIn()
+    }
 
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                navController.navigate("home") {
+                navController.navigate("root") {
                     popUpTo("welcome") { inclusive = true }
+                }
+            }
+            is AuthState.Idle,
+            is AuthState.Error,
+            is AuthState.Message -> {
+                navController.navigate("welcome") {
+                    popUpTo("root") { inclusive = true }
                 }
             }
             else -> {}
         }
     }
+
+    NavHost(
+        navController = navController,
+        startDestination = if (authState is AuthState.Success) "root" else "welcome"
+    ) {
+        composable("welcome") {
+            WelcomeScreen(viewModel = authViewModel)
+        }
+
+        composable("root") {
+            MemberRootScreen(
+                viewModel = authViewModel,
+                onLogout = {
+                    navController.navigate("welcome") {
+                        popUpTo("root") { inclusive = true }
+                    }
+                }
+            )
+        }
+    }
 }
+
