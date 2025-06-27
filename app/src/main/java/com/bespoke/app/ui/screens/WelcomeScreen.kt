@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.bespoke.app.R
 import com.bespoke.app.ui.components.auth.BottomPanel
 import com.bespoke.app.ui.components.auth.Greeting
@@ -43,11 +44,11 @@ import com.bespoke.app.data.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.auth.rememberImeVisibility
 
 @Composable
-fun WelcomeScreen(
-    viewModel: AuthViewModel,
-) {
+fun WelcomeScreen() {
+    val authViewModel: AuthViewModel = hiltViewModel()
+
     var panelState by remember { mutableStateOf<BottomPanelContent>(BottomPanelContent.Welcome) }
-    val authState by viewModel.authState.collectAsState()
+    val authState by authViewModel.authState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val view = LocalView.current
     val imeVisible = rememberImeVisibility(view)
@@ -107,7 +108,6 @@ fun WelcomeScreen(
                 BottomPanel(
                     state = panelState,
                     onChangeState = { panelState = it },
-                    viewModel = viewModel,
                     imeVisible = imeVisible
                 )
             }
@@ -125,7 +125,7 @@ fun WelcomeScreen(
         }
 
 
-        val authState by viewModel.authState.collectAsState()
+        val authState by authViewModel.authState.collectAsState()
 
         LaunchedEffect(authState) {
             when (authState) {

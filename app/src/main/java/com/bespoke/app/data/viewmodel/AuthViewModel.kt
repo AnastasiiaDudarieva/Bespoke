@@ -17,8 +17,21 @@ class AuthViewModel @Inject constructor(
     private val authService: AuthService
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading) // Изначально Loading
     val authState = _authState.asStateFlow()
+
+    init {
+        checkIfLoggedIn()
+    }
+
+    fun checkIfLoggedIn() {
+        val uid = authService.currentUserId()
+        if (uid != null) {
+            _authState.value = AuthState.Success(uid)
+        } else {
+            _authState.value = AuthState.Idle
+        }
+    }   
 
     fun login(email: String, password: String) {
         if (_authState.value == AuthState.Loading) return
@@ -33,13 +46,6 @@ class AuthViewModel @Inject constructor(
             result
                 .onSuccess { uid -> _authState.value = AuthState.Success(uid) }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
-        }
-    }
-
-    fun checkIfLoggedIn() {
-        val uid = authService.currentUserId()
-        if (uid != null) {
-            _authState.value = AuthState.Success(uid)
         }
     }
 

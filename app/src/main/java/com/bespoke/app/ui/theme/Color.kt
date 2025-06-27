@@ -8,3 +8,10 @@ val TextDark = Color(0xFF070E21)
 
 val InputBackgroundColor = Color(0xFFF3F4F6)
 val PlaceholderColor = Color(0xFF868B8F)
+
+
+val NavBarBackgroundColor = Color(0xFFF9FAFB)
+
+val MorningGradient = listOf(Color(0xFFC6F1F1), Color(0xFFFFD934))
+val AfternoonGradient = listOf(Color(0xFFA4B9FE), Color(0xFFC6F1F0))
+val EveningGradient = listOf(Color(0xFFFF9034), Color(0xFF729DF4))

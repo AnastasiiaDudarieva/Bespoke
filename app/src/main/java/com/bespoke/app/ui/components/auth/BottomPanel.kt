@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -25,22 +24,23 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.bespoke.app.R
+import com.bespoke.app.data.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.base.BespokeButton
 import com.bespoke.app.ui.components.base.BespokeInput
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText
 import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeButtonCancelColors
-import com.bespoke.app.data.viewmodel.AuthViewModel
 
 @Composable
 fun BottomPanel(
     state: BottomPanelContent,
     onChangeState: (BottomPanelContent) -> Unit,
-    viewModel: AuthViewModel,
     imeVisible: Boolean
 ) {
+    val authViewModel: AuthViewModel = hiltViewModel()
 
     Column(
         modifier = Modifier
@@ -111,7 +111,7 @@ fun BottomPanel(
                 }
 
                 BespokeButton(
-                    onClick = { viewModel.login(email, password) },
+                    onClick = { authViewModel.login(email, password) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(88.dp),
@@ -164,11 +164,11 @@ fun BottomPanel(
                             BespokeButton(
                                 onClick = {
                                     if (state == BottomPanelContent.RequestInvite)
-                                        viewModel.requestInvite(
+                                        authViewModel.requestInvite(
                                             email = emailRequest
                                         )
                                     else
-                                        viewModel.resetPassword(
+                                        authViewModel.resetPassword(
                                             email = emailRequest
                                         )
                                 },
@@ -185,7 +185,7 @@ fun BottomPanel(
             }
         }
 
-        val authState by viewModel.authState.collectAsState()
+        val authState by authViewModel.authState.collectAsState()
 
         LaunchedEffect(authState) {
             when (authState) {
