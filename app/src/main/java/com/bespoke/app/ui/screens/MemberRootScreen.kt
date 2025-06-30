@@ -18,27 +18,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
-import com.bespoke.app.data.viewmodel.AuthViewModel
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.NavBarBackgroundColor
 import com.bespoke.app.ui.theme.TextDark
 
 sealed class TabItem(val label: String, @DrawableRes val iconRes: Int) {
-    object Home : TabItem("Home", R.drawable.ic_home)
-    object Schedule : TabItem("Schedule", R.drawable.ic_calendar)
-    object Programs : TabItem("Programs", R.drawable.ic_program)
-    object Guidance : TabItem("Guidance", R.drawable.ic_guidance)
+    data object Home : TabItem("Home", R.drawable.ic_home)
+    data object Schedule : TabItem("Schedule", R.drawable.ic_calendar)
+    data object Programs : TabItem("Programs", R.drawable.ic_program)
+    data object Guidance : TabItem("Guidance", R.drawable.ic_guidance)
 }
 
 @Composable
 fun MemberRootScreen(
-    onLogout: () -> Unit,
+    navController: NavHostController = rememberNavController(),
 ) {
     var currentTab: TabItem by remember { mutableStateOf(TabItem.Home) }
-    val authViewModel: AuthViewModel = hiltViewModel()
 
     Scaffold(
         bottomBar = {
@@ -57,7 +56,7 @@ fun MemberRootScreen(
                                 painter = painterResource(id = tab.iconRes),
                                 contentDescription = tab.label,
                                 tint = if (currentTab == tab) {
-                                   BespokeBlue
+                                    BespokeBlue
                                 } else {
                                     TextDark
                                 }
@@ -85,7 +84,7 @@ fun MemberRootScreen(
     ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
             when (currentTab) {
-                is TabItem.Home -> HomeScreen()
+                is TabItem.Home -> HomeScreen(navController )
                 is TabItem.Schedule -> Text("Schedule")
                 is TabItem.Programs -> Text("Programs")
                 is TabItem.Guidance -> Text("Guidance")

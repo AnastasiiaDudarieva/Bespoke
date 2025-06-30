@@ -2,6 +2,7 @@ package com.bespoke.app.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,12 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,7 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
+import com.bespoke.app.data.viewmodel.HomeViewModel
+import com.bespoke.app.ui.components.base.CustomAvatar
 import com.bespoke.app.ui.theme.AfternoonGradient
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.EveningGradient
@@ -33,9 +39,14 @@ import com.bespoke.app.ui.theme.TextDark
 import java.util.Calendar
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    navController: NavHostController = rememberNavController(),
+) {
     val salutation = Salutation.current
     val gradient = Brush.verticalGradient(colors = salutation.gradientColors)
+    val homeViewModel: HomeViewModel = hiltViewModel()
+    val member by homeViewModel.member.collectAsState()
+
 
     Column(
         modifier = Modifier
@@ -58,11 +69,15 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Icon(
-                painter = painterResource(id = R.drawable.ic_avatar),
-                contentDescription = "Avatar",
-                modifier = Modifier.size(48.dp),
-                tint = Color.Unspecified
+            CustomAvatar(
+                url = member?.avatar ?: "",
+                firstName = member?.firstName ?: "",
+                lastName = member?.lastName ?: "",
+                size = 48.dp,
+                modifier = Modifier
+                    .clickable {
+                        navController.navigate("profile")
+                    }
             )
         }
 

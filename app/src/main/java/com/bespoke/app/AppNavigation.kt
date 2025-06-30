@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.data.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.auth.BottomPanel
@@ -36,6 +37,7 @@ import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.screens.MemberRootScreen
+import com.bespoke.app.ui.screens.ProfileScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
 import com.bespoke.app.ui.theme.BespokeBlue
 
@@ -93,16 +95,25 @@ fun AppNavigation() {
             }
         }
         is AuthState.Success -> {
-            MemberRootScreen(
-                onLogout = {
-                    navController.navigate("welcome") {
-                        popUpTo("root") { inclusive = true }
-                    }
+            androidx.navigation.compose.NavHost(
+                navController = navController,
+                startDestination = "memberRoot"
+            ) {
+                composable("memberRoot") {
+                    MemberRootScreen(
+                        navController = navController
+                    )
                 }
-            )
+                composable("profile") {
+                    ProfileScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
         }
         else -> {
             WelcomeScreen()
         }
     }
 }
+

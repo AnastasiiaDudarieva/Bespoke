@@ -1,9 +1,14 @@
 package com.bespoke.app.di
 
 import com.bespoke.app.BuildConfig
-import com.bespoke.app.data.services.FirebaseService
 import com.bespoke.app.data.LoggingInterceptor
+import com.bespoke.app.data.repository.MemberRepository
+import com.bespoke.app.data.services.AuthService
+import com.bespoke.app.data.services.FirebaseService
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -49,6 +54,22 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideFirebaseFirestore(): FirebaseFirestore {
+        return Firebase.firestore
+    }
+
+    @Provides
+    @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideMemberStore(
+        firebaseFirestore: FirebaseFirestore,
+        firebaseAuth: FirebaseAuth,
+    ): MemberRepository = MemberRepository(
+        firebaseFirestore,
+        AuthService(firebaseAuth)
+    )
 
 }

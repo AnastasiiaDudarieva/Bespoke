@@ -105,13 +105,17 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation(libs.firebase.firestore)
+    implementation (libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.navigation.compose)
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
     implementation("com.google.dagger:hilt-android:2.56.2")
     ksp("com.google.dagger:hilt-android-compiler:2.56.2")
     implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
 
 
     // Retrofit

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 fun BespokeTopBar(
     canNavigateBack: Boolean,
     onBackClick: () -> Unit,
+    title: String?=null
 ) {
     TopAppBar(
         title = {},
