@@ -105,8 +105,8 @@ fun AppNavigation() {
                     )
                 }
                 composable("profile") {
-                    ProfileScreen(
-                        onBack = { navController.popBackStack() }
+                    ProfileScreen({},{},{}
+//                        onBack = { navController.popBackStack() }
                     )
                 }
             }

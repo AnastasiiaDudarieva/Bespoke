@@ -9,4 +9,5 @@ data class Member(
     val lastName: String?=null,
     val email: String?=null,
     val avatar: String? = null,
+    var createdAt: Int?=null
 )
