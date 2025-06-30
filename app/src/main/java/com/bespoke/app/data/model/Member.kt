@@ -10,4 +10,6 @@ data class Member(
     val email: String?=null,
     val avatar: String? = null,
     var createdAt: Int?=null
-)
+){
+    val fullName: String get() = "$firstName\n$lastName"
+}

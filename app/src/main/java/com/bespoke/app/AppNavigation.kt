@@ -68,7 +68,8 @@ fun AppNavigation() {
                     containerColor = Color.Transparent,
                     topBar = {
                         BespokeTopBar(
-                            canNavigateBack = false, {})
+                            canNavigateBack = false, {},
+                            color = Color.White)
                     },
                     contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 ) { paddingValues ->
@@ -105,8 +106,8 @@ fun AppNavigation() {
                     )
                 }
                 composable("profile") {
-                    ProfileScreen({},{},{}
-//                        onBack = { navController.popBackStack() }
+                    ProfileScreen( navController = navController,
+                        {},{}
                     )
                 }
             }

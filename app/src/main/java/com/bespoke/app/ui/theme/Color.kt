@@ -15,3 +15,8 @@ val NavBarBackgroundColor = Color(0xFFF9FAFB)
 val MorningGradient = listOf(Color(0xFFC6F1F1), Color(0xFFFFD934))
 val AfternoonGradient = listOf(Color(0xFFA4B9FE), Color(0xFFC6F1F0))
 val EveningGradient = listOf(Color(0xFFFF9034), Color(0xFF729DF4))
+
+val StreakColor = Color(0xFFEFEBF5)
+val ProgramsColor = Color(0xFFE8F2F5)
+val CaloriesColor = Color(0xFFFAE4D6)
+val WorkoutTimeColor = Color(0xFFE3EDDB)

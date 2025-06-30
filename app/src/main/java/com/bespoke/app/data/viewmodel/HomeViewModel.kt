@@ -7,10 +7,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
 ) : ViewModel() {
 
     val member = memberRepository.member
 
+    fun logout() {
+        memberRepository.logout()
+    }
 
 }

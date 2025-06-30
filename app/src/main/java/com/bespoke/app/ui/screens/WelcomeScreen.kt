@@ -34,14 +34,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bespoke.app.R
+import com.bespoke.app.data.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.auth.BottomPanel
 import com.bespoke.app.ui.components.auth.Greeting
+import com.bespoke.app.ui.components.auth.rememberImeVisibility
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.models.auth.BottomPanelContent
 import com.bespoke.app.ui.theme.BespokeBlue
-import com.bespoke.app.data.viewmodel.AuthViewModel
-import com.bespoke.app.ui.components.auth.rememberImeVisibility
 
 @Composable
 fun WelcomeScreen() {
@@ -73,7 +73,8 @@ fun WelcomeScreen() {
             topBar = {
                 BespokeTopBar(
                     canNavigateBack = panelState != BottomPanelContent.Welcome,
-                    onBackClick = { panelState = BottomPanelContent.Welcome }
+                    onBackClick = { panelState = BottomPanelContent.Welcome },
+                    color = Color.White
                 )
             },
             contentWindowInsets = WindowInsets(0, 0, 0, 0),

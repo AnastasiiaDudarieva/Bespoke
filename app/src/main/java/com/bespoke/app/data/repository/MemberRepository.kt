@@ -1,10 +1,8 @@
 package com.bespoke.app.data.repository
 
-import android.util.Log
 import com.bespoke.app.data.model.Member
 import com.bespoke.app.data.services.AuthService
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,20 +15,25 @@ import javax.inject.Singleton
 @Singleton
 class MemberRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: AuthService
+    private val auth: AuthService,
 ) {
     private val _member = MutableStateFlow<Member?>(null)
     val member: StateFlow<Member?> = _member
 
     init {
-        auth.currentUserId()?.let { uid ->
+        currentUserId()?.let { uid ->
             CoroutineScope(Dispatchers.IO).launch {
                 loadMemberById(uid)
             }
         }
     }
 
-    private suspend fun loadMemberById(userId: String) {
+    fun currentUserId() = auth.currentUserId()
+
+    suspend fun login(email: String, password: String) = auth.login(email, password)
+    suspend fun resetPassword(email: String) = auth.resetPassword(email)
+
+    suspend fun loadMemberById(userId: String) {
         try {
             val document = firestore.collection("members").document(userId).get().await()
             _member.value = document.toObject(Member::class.java)
@@ -44,7 +47,7 @@ class MemberRepository @Inject constructor(
         _member.value = null
     }
 
-    fun logout(){
+    fun logout() {
         auth.logout()
         clearMember()
     }

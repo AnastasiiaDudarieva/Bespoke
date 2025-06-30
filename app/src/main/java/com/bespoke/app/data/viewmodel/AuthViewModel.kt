@@ -3,7 +3,7 @@ package com.bespoke.app.data.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.repository.FirebaseRepository
-import com.bespoke.app.data.services.AuthService
+import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.ui.models.auth.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,24 +14,28 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val firebaseRepository: FirebaseRepository,
-    private val authService: AuthService
+    private val memberRepository: MemberRepository,
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading) // Изначально Loading
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState = _authState.asStateFlow()
 
     init {
-        checkIfLoggedIn()
+        viewModelScope.launch {
+            memberRepository.member.collect { member ->
+                checkIfLoggedIn()
+            }
+        }
     }
 
-    fun checkIfLoggedIn() {
-        val uid = authService.currentUserId()
+    private fun checkIfLoggedIn() {
+        val uid = memberRepository.currentUserId()
         if (uid != null) {
             _authState.value = AuthState.Success(uid)
         } else {
             _authState.value = AuthState.Idle
         }
-    }   
+    }
 
     fun login(email: String, password: String) {
         if (_authState.value == AuthState.Loading) return
@@ -42,17 +46,15 @@ class AuthViewModel @Inject constructor(
 
         _authState.value = AuthState.Loading
         viewModelScope.launch {
-            val result = authService.login(email, password)
+            val result = memberRepository.login(email, password)
             result
-                .onSuccess { uid -> _authState.value = AuthState.Success(uid) }
+                .onSuccess { uid ->
+                    memberRepository.loadMemberById(uid)
+                }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
         }
     }
 
-    fun logout() {
-        authService.logout()
-        _authState.value = AuthState.Idle
-    }
 
     fun resetPassword(email: String) {
         if (_authState.value == AuthState.Loading) return
@@ -63,7 +65,7 @@ class AuthViewModel @Inject constructor(
 
         _authState.value = AuthState.Loading
         viewModelScope.launch {
-            val result = authService.resetPassword(email)
+            val result = memberRepository.resetPassword(email)
             result
                 .onSuccess { _authState.value = AuthState.Message("Check your email") }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
