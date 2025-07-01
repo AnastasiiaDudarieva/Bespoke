@@ -195,7 +195,7 @@ fun ProfileScreen(
 
                 ClickableUnderlinedText(
                     text = stringResource(R.string.settings),
-                    onClick = { navController.navigate(Screen.Settings) })
+                    onClick = { navController.navigate(Screen.SETTINGS) })
             }
         }
 

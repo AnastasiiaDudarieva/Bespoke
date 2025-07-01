@@ -15,9 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,25 +23,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bespoke.app.BuildConfig
 import com.bespoke.app.R
-import com.bespoke.app.data.viewmodel.SettingsViewModel
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.utils.privacyPolicy
 import com.bespoke.app.utils.termsOfService
-import androidx.core.net.toUri
-import com.bespoke.app.navigation.Screen
 
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val member by viewModel.member.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         BespokeTopBar(
@@ -56,7 +48,7 @@ fun SettingsScreen(
         Column {
 
             SettingItem(title = stringResource(R.string.account)) {
-                //TODO: Handle account settings
+                navController.navigate(Screen.ACCOUNT)
             }
             HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
 

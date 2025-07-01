@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.bespoke.app.data.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.base.WebViewScreen
 import com.bespoke.app.ui.models.auth.AuthState
+import com.bespoke.app.ui.screens.AccountScreen
 import com.bespoke.app.ui.screens.MemberRootScreen
 import com.bespoke.app.ui.screens.ProfileScreen
 import com.bespoke.app.ui.screens.SettingsScreen
@@ -26,18 +27,21 @@ fun AppNavigation() {
         is AuthState.Success -> {
             androidx.navigation.compose.NavHost(
                 navController = navController,
-                startDestination = Screen.MemberRoot
+                startDestination = Screen.MEMBER_ROOT
             ) {
-                composable(Screen.MemberRoot) {
+                composable(Screen.MEMBER_ROOT) {
                     MemberRootScreen(navController = navController)
                 }
-                composable(Screen.Profile) {
+                composable(Screen.PROFILE) {
                     ProfileScreen( navController = navController)
                 }
-                composable(Screen.Settings) {
+                composable(Screen.SETTINGS) {
                     SettingsScreen( navController = navController)
                 }
-                composable(route = "${Screen.WebView}?url={url}",
+                composable(Screen.ACCOUNT) {
+                    AccountScreen( navController = navController)
+                }
+                composable(route = "${Screen.WEB_VIEW}?url={url}",
                     arguments = listOf(
                         navArgument("url") { defaultValue = ""; nullable = true }
                     )

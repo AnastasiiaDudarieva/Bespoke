@@ -79,7 +79,7 @@ fun HomeScreen(
                     size = 48.dp,
                     modifier = Modifier
                         .clickable {
-                            navController.navigate(Screen.Profile)
+                            navController.navigate(Screen.PROFILE)
                         }
                 )
             }

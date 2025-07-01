@@ -1,13 +1,14 @@
 package com.bespoke.app.navigation
 
 object Screen {
-    const val MemberRoot = "memberRoot"
-    const val Profile = "profile"
-    const val Settings = "settings"
-    const val Account = "account"
-    const val WebView = "webview"
+    const val MEMBER_ROOT = "memberRoot"
+    const val PROFILE = "profile"
+    const val SETTINGS = "settings"
+    const val ACCOUNT = "account"
+    const val EDIT_ACCOUNT = "editAccount"
+    const val WEB_VIEW = "webView"
 
     fun webViewWithUrl(url: String): String {
-        return "$WebView?url=$url"
+        return "$WEB_VIEW?url=$url"
     }
 }

@@ -11,6 +11,7 @@ import com.bespoke.app.R
 
 val BeatriceFontFamily = FontFamily(
     Font(R.font.beatrice_regular, FontWeight.Normal),
+    Font(R.font.beatrice_semibold, FontWeight.W600),
     Font(R.font.beatrice_bold, FontWeight.Bold)
 )
 
@@ -36,4 +37,11 @@ val Typography = Typography(
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp
     ),
+//    for caps title
+    labelLarge = TextStyle(
+        fontFamily = BeatriceFontFamily,
+        fontWeight = FontWeight.W600,
+        fontSize = 12.sp
+    ),
+
 )
