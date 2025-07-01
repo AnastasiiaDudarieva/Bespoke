@@ -41,6 +41,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
 import com.bespoke.app.data.viewmodel.HomeViewModel
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText
 import com.bespoke.app.ui.components.base.CustomAvatar
@@ -192,7 +193,9 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                ClickableUnderlinedText(text = "Settings", onClick = {})
+                ClickableUnderlinedText(
+                    text = stringResource(R.string.settings),
+                    onClick = { navController.navigate(Screen.Settings) })
             }
         }
 

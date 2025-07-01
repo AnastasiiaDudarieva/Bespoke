@@ -1,6 +1,5 @@
 package com.bespoke.app.ui.screens
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +30,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
 import com.bespoke.app.data.viewmodel.HomeViewModel
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.CustomAvatar
 import com.bespoke.app.ui.theme.AfternoonGradient
 import com.bespoke.app.ui.theme.BeatriceFontFamily
@@ -40,7 +39,6 @@ import com.bespoke.app.ui.theme.MorningGradient
 import com.bespoke.app.ui.theme.TextDark
 import java.util.Calendar
 
-internal val imageBitmapCache = mutableStateMapOf<String, Bitmap?>()
 
 @Composable
 fun HomeScreen(
@@ -81,7 +79,7 @@ fun HomeScreen(
                     size = 48.dp,
                     modifier = Modifier
                         .clickable {
-                            navController.navigate("profile")
+                            navController.navigate(Screen.Profile)
                         }
                 )
             }

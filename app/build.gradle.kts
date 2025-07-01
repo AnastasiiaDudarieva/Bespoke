@@ -121,8 +121,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("com.github.CanHub:Android-Image-Cropper:4.4.0")
 
-    implementation("com.google.accompanist:accompanist-placeholder-material:0.30.1")
-
 
     // Retrofit
     implementation(libs.retrofit)
