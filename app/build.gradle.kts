@@ -30,7 +30,17 @@ fun getDate(): String {
     return df.format(Date())
 }
 
+
 android {
+    signingConfigs {
+        create("config") {
+            keyAlias = property("KEY_ALIAS") as String
+            keyPassword = property("KEY_PASSWORD") as String
+            storeFile = file(property("STORE_FILE") as String)
+            storePassword = property("STORE_PASSWORD") as String
+        }
+    }
+
     namespace = "com.bespoke.app"
     compileSdk = 35
 
@@ -52,12 +62,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("config")
             buildConfigField("String", "ENDPOINT", "\"${property("PRODUCTION_ENDPOINT")}\"")
         }
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("config")
             buildConfigField("String", "ENDPOINT", "\"${property("DEV_ENDPOINT")}\"")
         }
     }
