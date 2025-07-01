@@ -17,7 +17,7 @@ class AuthViewModel @Inject constructor(
     private val memberRepository: MemberRepository,
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
 
     init {

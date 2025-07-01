@@ -39,52 +39,52 @@ fun AppNavigation() {
     val authState by authViewModel.authState.collectAsState()
 
     when(authState) {
-        is AuthState.Loading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding()
-                    .background(BespokeBlue)
-            ) {
-
-                Image(
-                    painter = painterResource(id = R.drawable.line_variants),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                Scaffold(
-                    containerColor = Color.Transparent,
-                    topBar = {
-                        BespokeTopBar(
-                            canNavigateBack = false, {},
-                            color = Color.White)
-                    },
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                ) { paddingValues ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(
-                                start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
-                                end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
-                                bottom = paddingValues.calculateBottomPadding()
-                            )
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.bespoke_wordmark),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(
-                                    start = 24.dp,
-                                    top = 128.dp
-                                )
-                        )
-                    }
-                }
-            }
-        }
+//        is AuthState.Loading -> {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .imePadding()
+//                    .background(BespokeBlue)
+//            ) {
+//
+//                Image(
+//                    painter = painterResource(id = R.drawable.line_variants),
+//                    contentDescription = null,
+//                    contentScale = ContentScale.Crop,
+//                    modifier = Modifier.fillMaxSize()
+//                )
+//
+//                Scaffold(
+//                    containerColor = Color.Transparent,
+//                    topBar = {
+//                        BespokeTopBar(
+//                            canNavigateBack = false, {},
+//                            color = Color.White)
+//                    },
+//                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
+//                ) { paddingValues ->
+//                    Column(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(
+//                                start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
+//                                end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
+//                                bottom = paddingValues.calculateBottomPadding()
+//                            )
+//                    ) {
+//                        Image(
+//                            painter = painterResource(id = R.drawable.bespoke_wordmark),
+//                            contentDescription = null,
+//                            modifier = Modifier
+//                                .padding(
+//                                    start = 24.dp,
+//                                    top = 128.dp
+//                                )
+//                        )
+//                    }
+//                }
+//            }
+//        }
         is AuthState.Success -> {
             androidx.navigation.compose.NavHost(
                 navController = navController,
