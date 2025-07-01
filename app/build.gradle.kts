@@ -46,7 +46,7 @@ android {
     }
 
     buildTypes {
-        release{
+        release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -68,7 +68,8 @@ android {
                 "release" -> "Bespoke_v.${versionName}_${getDate()}.apk"
                 else -> "Bespoke_${buildType.name}.apk"
             }
-            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = appName
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                appName
         }
     }
 
@@ -82,7 +83,7 @@ android {
 
     buildFeatures {
         compose = true
-        buildConfig=true
+        buildConfig = true
     }
 
     composeOptions {
@@ -106,24 +107,29 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
-    implementation (libs.kotlinx.coroutines.play.services)
+    implementation(libs.firebase.storage.ktx)
+
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.navigation.compose)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
 
     implementation("com.google.dagger:hilt-android:2.56.2")
+    implementation(libs.firebase.crashlytics.buildtools)
     ksp("com.google.dagger:hilt-android-compiler:2.56.2")
-    implementation ("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("com.github.CanHub:Android-Image-Cropper:4.4.0")
 
+    implementation("com.google.accompanist:accompanist-placeholder-material:0.30.1")
 
 
     // Retrofit
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.okhttp)
-    implementation (libs.logging.interceptor)
-    implementation (libs.retrofit2.kotlin.coroutines.adapter)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+    implementation(libs.retrofit2.kotlin.coroutines.adapter)
 
 
     testImplementation(libs.junit)

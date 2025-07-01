@@ -69,16 +69,19 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            CustomAvatar(
-                url = member?.avatar ?: "",
-                firstName = member?.firstName ?: "",
-                lastName = member?.lastName ?: "",
-                size = 48.dp,
-                modifier = Modifier
-                    .clickable {
-                        navController.navigate("profile")
-                    }
-            )
+            member?.let {
+                CustomAvatar(
+                    url = it.avatar ?: "",
+                    firstName = it.firstName ?: "",
+                    lastName = it.lastName ?: "",
+                    size = 48.dp,
+                    modifier = Modifier
+                        .clickable {
+                            navController.navigate("profile")
+                        }
+                )
+            }
+
         }
 
         Text(

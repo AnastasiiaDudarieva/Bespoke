@@ -1,5 +1,10 @@
 package com.bespoke.app.ui.screens
 
+import android.app.Activity
+import android.net.Uri
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -31,7 +37,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
@@ -44,6 +49,11 @@ import com.bespoke.app.ui.models.profile.ProfileStatsType
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.TextDark
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -51,12 +61,42 @@ import java.util.Locale
 @Composable
 fun ProfileScreen(
     navController: NavHostController = rememberNavController(),
-    onOpenSettings: () -> Unit,
-    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val homeViewModel: HomeViewModel = hiltViewModel()
     val member by homeViewModel.member.collectAsState()
+
+    val context = LocalContext.current
+    val cropImageLauncher = rememberLauncherForActivityResult(CropImageContract()) { result ->
+        if (result.isSuccessful) {
+            val croppedUri = result.uriContent
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, croppedUri)
+            homeViewModel.uploadProfileImage(bitmap)
+        }
+    }
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            cropImageLauncher.launch(
+                CropImageContractOptions(
+                    uri,
+                    CropImageOptions().apply {
+                        aspectRatioX = 1
+                        aspectRatioY = 1
+                        fixAspectRatio = true
+                        guidelines = CropImageView.Guidelines.ON
+                    }
+                )
+            )
+        }
+    }
+
+
+
+
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -73,14 +113,17 @@ fun ProfileScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = member?.fullName?:"",
+                        text = member?.fullName ?: "",
                         fontFamily = BeatriceFontFamily,
                         color = TextDark,
                         style = MaterialTheme.typography.headlineSmall
                     )
 
                     Text(
-                        text = stringResource(R.string.joined_at,"${member?.createdAt?.toFormattedDate()}"),
+                        text = stringResource(
+                            R.string.joined_at,
+                            "${member?.createdAt?.toFormattedDate()}"
+                        ),
                         fontFamily = BeatriceFontFamily,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(top = 12.dp, bottom = 20.dp)
@@ -108,7 +151,9 @@ fun ProfileScreen(
                         size = 120.dp
                     )
                     IconButton(
-                        onClick = onAvatarClick,
+                        onClick = {
+                            pickImageLauncher.launch("image/*")
+                        },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .background(BespokeBlue, CircleShape)
@@ -148,10 +193,11 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            ClickableUnderlinedText(text = "Settings", onClick = onOpenSettings)
+            ClickableUnderlinedText(text = "Settings", onClick = {})
         }
     }
 }
+
 fun Int.toFormattedDate(): String {
     val sdf = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
     return sdf.format(Date(this * 1000L))

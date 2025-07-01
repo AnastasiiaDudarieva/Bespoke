@@ -49,6 +49,7 @@ class AuthViewModel @Inject constructor(
             val result = memberRepository.login(email, password)
             result
                 .onSuccess { uid ->
+                    _authState.value = AuthState.Success(uid)
                     memberRepository.loadMemberById(uid)
                 }
                 .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
@@ -84,4 +85,3 @@ class AuthViewModel @Inject constructor(
         }
     }
 }
-
