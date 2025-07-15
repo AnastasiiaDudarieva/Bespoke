@@ -35,4 +35,12 @@
     <string name="last_name">Last Name</string>
     <string name="dob">DOB</string>
     <string name="email">Email</string>
+    <string name="edit">Edit</string>
+
+    <string name="first_name_">First name*</string>
+    <string name="last_name_">Last name*</string>
+    <string name="phone_number">Phone number</string>
+    <string name="address_">Address*</string>
+    <string name="date_of_birth_">Date of Birth*</string>
+    <string name="invalid_date_selected">Invalid date selected</string>
 </resources>

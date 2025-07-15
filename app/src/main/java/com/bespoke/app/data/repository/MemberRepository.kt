@@ -85,24 +85,21 @@ class MemberRepository @Inject constructor(
         }
     }
 
-    fun startListeningForMemberChanges(userId: String) {
+    private fun startListeningForMemberChanges(userId: String) {
         memberListener?.remove()
-
         val docRef = FirebaseFirestore.getInstance()
             .collection("members")
             .document(userId)
-
         memberListener = docRef.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null || !snapshot.exists()) {
                 return@addSnapshotListener
             }
-
             val updatedMember = snapshot.toObject(Member::class.java)
             _member.value = updatedMember
         }
     }
 
-    fun stopListeningForMemberChanges() {
+    private fun stopListeningForMemberChanges() {
         memberListener?.remove()
         memberListener = null
     }
@@ -116,4 +113,7 @@ class MemberRepository @Inject constructor(
             null
         }
     }
+
+
+
 }

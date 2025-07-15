@@ -1,4 +1,4 @@
-package com.bespoke.app.data.viewmodel
+package com.bespoke.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,16 +24,5 @@ class AccountViewModel @Inject constructor(
                 _member.value = m
             }
         }
-    }
-
-    private val _navigateToEdit = MutableStateFlow(false)
-    val navigateToEdit: StateFlow<Boolean> = _navigateToEdit
-
-    fun onEditClicked() {
-        _navigateToEdit.value = true
-    }
-
-    fun onEditNavigated() {
-        _navigateToEdit.value = false
     }
 }

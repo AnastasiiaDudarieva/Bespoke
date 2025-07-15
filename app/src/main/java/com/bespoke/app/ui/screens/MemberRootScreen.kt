@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.screens
 
+import SetStatusBarIconsDark
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,8 @@ sealed class TabItem(val label: String, @DrawableRes val iconRes: Int) {
 fun MemberRootScreen(
     navController: NavHostController = rememberNavController(),
 ) {
+    SetStatusBarIconsDark(darkIcons = true)
+
     var currentTab: TabItem by remember { mutableStateOf(TabItem.Home) }
 
     Scaffold(

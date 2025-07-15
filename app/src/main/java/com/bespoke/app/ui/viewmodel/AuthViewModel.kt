@@ -1,4 +1,4 @@
-package com.bespoke.app.data.viewmodel
+package com.bespoke.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

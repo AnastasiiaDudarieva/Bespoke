@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.screens
 
+import SetStatusBarIconsDark
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -36,6 +37,8 @@ import com.bespoke.app.utils.termsOfService
 fun SettingsScreen(
     navController: NavHostController,
 ) {
+    SetStatusBarIconsDark(darkIcons = true)
+
     val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize()) {

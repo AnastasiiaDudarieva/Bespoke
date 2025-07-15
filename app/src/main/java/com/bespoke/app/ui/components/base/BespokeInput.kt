@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -36,7 +37,7 @@ fun BespokeInput(
     label: String,
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     val (actualTransformation, trailingIcon) = rememberVisualTransformationWithIcon(
         visualTransformation
@@ -66,8 +67,8 @@ fun BespokeInput(
             focusedIndicatorColor = BespokeBlue,
             unfocusedIndicatorColor = InputBackgroundColor,
             focusedLabelColor = BespokeBlue,
-            unfocusedContainerColor = White,
-            focusedContainerColor = White,
+            unfocusedContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
             cursorColor = BespokeBlue,
             focusedTextColor = TextDark,
             unfocusedTextColor = TextDark

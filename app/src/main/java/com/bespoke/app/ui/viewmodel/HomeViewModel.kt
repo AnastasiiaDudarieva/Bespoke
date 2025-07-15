@@ -1,4 +1,4 @@
-package com.bespoke.app.data.viewmodel
+package com.bespoke.app.ui.viewmodel
 
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel

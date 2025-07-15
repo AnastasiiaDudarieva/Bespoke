@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.screens
 
+import SetStatusBarIconsDark
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,7 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
-import com.bespoke.app.data.viewmodel.HomeViewModel
+import com.bespoke.app.ui.viewmodel.HomeViewModel
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.CustomAvatar
 import com.bespoke.app.ui.theme.AfternoonGradient
@@ -44,11 +45,11 @@ import java.util.Calendar
 fun HomeScreen(
     navController: NavHostController = rememberNavController(),
 ) {
+    SetStatusBarIconsDark(darkIcons = true)
     val salutation = Salutation.current
     val gradient = Brush.verticalGradient(colors = salutation.gradientColors)
     val homeViewModel: HomeViewModel = hiltViewModel()
     val member by homeViewModel.member.collectAsState()
-
 
     Column(
         modifier = Modifier

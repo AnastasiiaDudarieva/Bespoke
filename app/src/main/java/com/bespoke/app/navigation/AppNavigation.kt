@@ -7,10 +7,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bespoke.app.data.viewmodel.AuthViewModel
+import com.bespoke.app.ui.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.base.WebViewScreen
 import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.screens.AccountScreen
+import com.bespoke.app.ui.screens.EditMemberProfileScreen
 import com.bespoke.app.ui.screens.MemberRootScreen
 import com.bespoke.app.ui.screens.ProfileScreen
 import com.bespoke.app.ui.screens.SettingsScreen
@@ -40,6 +41,9 @@ fun AppNavigation() {
                 }
                 composable(Screen.ACCOUNT) {
                     AccountScreen( navController = navController)
+                }
+                composable(Screen.EDIT_ACCOUNT) {
+                    EditMemberProfileScreen( navController = navController)
                 }
                 composable(route = "${Screen.WEB_VIEW}?url={url}",
                     arguments = listOf(

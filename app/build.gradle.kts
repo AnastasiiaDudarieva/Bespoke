@@ -132,6 +132,11 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("com.github.CanHub:Android-Image-Cropper:4.4.0")
+    implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.libphonenumber)
+
+
+
 
 
     // Retrofit

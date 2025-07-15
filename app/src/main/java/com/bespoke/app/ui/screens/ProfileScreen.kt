@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.screens
 
+import SetStatusBarIconsDark
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,7 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
-import com.bespoke.app.data.viewmodel.HomeViewModel
+import com.bespoke.app.ui.viewmodel.HomeViewModel
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText
@@ -63,6 +64,8 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    SetStatusBarIconsDark(darkIcons = true)
+
     val homeViewModel: HomeViewModel = hiltViewModel()
     val member by homeViewModel.member.collectAsState()
     val isUploadingAvatar by homeViewModel.isUploadingAvatar.collectAsState()
@@ -118,7 +121,6 @@ fun ProfileScreen(
                             color = TextDark,
                             style = MaterialTheme.typography.headlineSmall
                         )
-
                         Text(
                             text = stringResource(
                                 R.string.joined_at,

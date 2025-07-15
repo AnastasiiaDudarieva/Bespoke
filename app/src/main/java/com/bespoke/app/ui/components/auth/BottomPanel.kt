@@ -26,7 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bespoke.app.R
-import com.bespoke.app.data.viewmodel.AuthViewModel
+import com.bespoke.app.ui.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.base.BespokeButton
 import com.bespoke.app.ui.components.base.BespokeInput
 import com.bespoke.app.ui.components.base.ClickableUnderlinedText

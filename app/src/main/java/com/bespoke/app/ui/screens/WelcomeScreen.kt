@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.screens
 
+import SetStatusBarIconsDark
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -35,7 +36,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bespoke.app.R
-import com.bespoke.app.data.viewmodel.AuthViewModel
+import com.bespoke.app.ui.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.auth.BottomPanel
 import com.bespoke.app.ui.components.auth.Greeting
 import com.bespoke.app.ui.components.auth.rememberImeVisibility
@@ -46,6 +47,8 @@ import com.bespoke.app.ui.theme.BespokeBlue
 
 @Composable
 fun WelcomeScreen() {
+    SetStatusBarIconsDark(darkIcons = false)
+
     val authViewModel: AuthViewModel = hiltViewModel()
 
     var panelState by remember { mutableStateOf<BottomPanelContent>(BottomPanelContent.Welcome) }
