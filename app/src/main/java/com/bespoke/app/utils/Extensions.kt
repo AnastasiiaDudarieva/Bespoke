@@ -5,6 +5,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import java.util.Calendar
+import java.util.Date
 
 fun String.isValidEmail(): Boolean {
     return android.util.Patterns.EMAIL_ADDRESS.matcher(this).matches()
@@ -35,3 +37,24 @@ fun String.formatPhoneNumber(mask: String = "+XXXX-XXX-XXXX"): String {
 
     return result.toString().replace("++", "+")
 }
+
+fun Long.toDateWithoutTime(): Date {
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = this * 1000L
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    return cal.time
+}
+
+fun Date.toStartOfDay(): Date {
+    val cal = Calendar.getInstance()
+    cal.time = this
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    return cal.time
+}
+

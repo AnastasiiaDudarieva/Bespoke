@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
@@ -185,11 +186,11 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                StatsCard(ProfileStatsType.Streak, value = "13 Days")
+                StatsCard(ProfileStatsType.Streak, value = homeViewModel.getLongestStreakDisplay())
                 Spacer(modifier = Modifier.height(8.dp))
-                StatsCard(ProfileStatsType.Programs, value = "44 Complete")
+                StatsCard(ProfileStatsType.Programs, value = homeViewModel.getCompletedProgramCount())
                 Spacer(modifier = Modifier.height(8.dp))
-                StatsCard(ProfileStatsType.Calories, value = "13,288 Burned")
+                StatsCard(ProfileStatsType.Calories, value = homeViewModel.getTotalBurnedCalories())
                 Spacer(modifier = Modifier.height(8.dp))
                 StatsCard(ProfileStatsType.WorkoutTime, value = "1400 Min")
 

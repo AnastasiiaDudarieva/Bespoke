@@ -3,6 +3,8 @@ package com.bespoke.app.ui.viewmodel
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.ui.components.base.imageBitmapCache
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,6 +40,20 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun getLongestStreakDisplay(): String {
+        val longest = memberRepository.getStreakDataStats()?.longestStreak ?: 0
+        return if (longest == 1) "1 Day" else "$longest Days"
+    }
+
+    fun getCompletedProgramCount(): String {
+        val completedPrograms = memberRepository.getPastWorkouts().count { it.didComplete }
+        return "$completedPrograms Complete"
+    }
+
+    fun getTotalBurnedCalories(): String{
+        val totalCalories = memberRepository.totalCalories()
+        return "$totalCalories Burned"
+    }
 
     fun logout() {
         memberRepository.logout()
