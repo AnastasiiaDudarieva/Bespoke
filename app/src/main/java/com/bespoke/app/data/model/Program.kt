@@ -1,20 +1,25 @@
 package com.bespoke.app.data.model
 
+import android.util.Log
+import com.bespoke.app.utils.getDayName
+import com.bespoke.app.utils.toStartOfDay
+import com.google.firebase.firestore.DocumentId
 import java.util.Calendar
 import java.util.Date
 
 data class Program(
-    val id: String = "",
-    val title: String = "",
-    val createdAt: Long = 0L,
-    val updatedAt: Long = 0L,
-    val days: List<Int> = emptyList(), // 1 = Sunday, 2 = Monday...
-    val focus: String = "",
-    val sections: List<ProgramSection> = emptyList(),
-    val status: String = "draft",
-    val providerId: String = "",
-    val memberIds: List<String> = emptyList(),
-    val version: Int = 1,
+    @DocumentId
+    val id: String? = null,
+    val title: String?= null,
+    val createdAt: Long? = null,
+    val updatedAt: Long? = null,
+    val days: List<String>? = null, // sun, mon...
+    val focus: String? = null,
+    val sections: List<ProgramSection>? = null,
+    val status: String? = null,
+    val providerId: String?= null,
+    val memberIds: List<String>? = null,
+    val version: Int? = null,
     val thumbnail: String? = null,
 ) {
     enum class Status(val value: String) {
@@ -31,12 +36,11 @@ data class Program(
 
     fun requiredWorkoutDays(): List<Date> {
         val result = mutableListOf<Date>()
-        var date = Date(createdAt * 1000)
-
+        var date = Date(createdAt?.times(1000) ?: 0L).toStartOfDay()
         val cal = Calendar.getInstance()
-        while (date.before(Date())) {
+        while (date.before(Date().toStartOfDay())) {
             cal.time = date
-            if (days.contains(cal.get(Calendar.DAY_OF_WEEK))) {
+            if (days?.contains(cal.getDayName()) == true) {
                 result.add(cal.time)
             }
             cal.add(Calendar.DATE, 1)
@@ -45,22 +49,3 @@ data class Program(
         return result
     }
 }
-//
-//fun Program.requiredWorkoutDays(): List<Date> {
-//    val startDate = Date(createdAt * 1000L)
-//    val result = mutableListOf<Date>()
-//    var current = startDate
-//
-//    val workoutDays = days.mapNotNull { it.dayOfWeekId }
-//
-//    while (current.before(Date())) {
-//        val cal = Calendar.getInstance().apply { time = current }
-//        if (workoutDays.contains(cal.get(Calendar.DAY_OF_WEEK))) {
-//            result.add(cal.time)
-//        }
-//        cal.add(Calendar.DAY_OF_MONTH, 1)
-//        current = cal.time
-//    }
-//
-//    return result
-//}

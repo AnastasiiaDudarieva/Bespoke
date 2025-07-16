@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -46,12 +47,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getCompletedProgramCount(): String {
-        val completedPrograms = memberRepository.getPastWorkouts().count { it.didComplete }
+        val completedPrograms = memberRepository.pastWorkouts.value.count { it.didComplete }
         return "$completedPrograms Complete"
     }
 
     fun getTotalBurnedCalories(): String{
-        val totalCalories = memberRepository.totalCalories()
+        val totalCalories = memberRepository.pastWorkouts.value.sumOf { it.calloriesBurned }.roundToInt()
         return "$totalCalories Burned"
     }
 

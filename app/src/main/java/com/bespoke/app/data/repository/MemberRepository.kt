@@ -1,13 +1,13 @@
 package com.bespoke.app.data.repository
 
 import android.graphics.Bitmap
+import android.util.Log
 import com.bespoke.app.data.model.Member
 import com.bespoke.app.data.model.PastWorkout
 import com.bespoke.app.data.model.Program
 import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.services.AuthService
-import com.bespoke.app.utils.toDateWithoutTime
 import com.bespoke.app.utils.toStartOfDay
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.temporal.ChronoUnit
@@ -25,7 +26,6 @@ import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Singleton
@@ -45,6 +45,10 @@ class MemberRepository @Inject constructor(
     private val _streakStats = MutableStateFlow<StreakDataStats?>(null)
     val streakStats: StateFlow<StreakDataStats?> = _streakStats
 
+    private val _pastWorkouts = MutableStateFlow<List<PastWorkout>>(emptyList())
+    val pastWorkouts: StateFlow<List<PastWorkout>> = _pastWorkouts
+
+
     val completedWorkouts: List<Workout>
         get() = workouts.value
             .filter { it.completedAt != null && it.effort != null }
@@ -55,12 +59,20 @@ class MemberRepository @Inject constructor(
     private var workoutsListener: ListenerRegistration? = null
 
 
-
     init {
         currentUserId()?.let { uid ->
             CoroutineScope(Dispatchers.IO).launch {
                 loadMemberById(uid)
                 startListeningForMemberChanges(uid)
+                listenToPrograms(uid)
+                listenToWorkouts(uid)
+
+                launch {
+                    combine(programs, workouts) { _, _ -> }
+                        .collect {
+                            calculatePastWorkouts()
+                        }
+                }
             }
         }
     }
@@ -75,10 +87,6 @@ class MemberRepository @Inject constructor(
             val document = firestore.collection("members").document(userId).get().await()
             val loadedMember = document.toObject(Member::class.java)
             _member.value = loadedMember
-            loadedMember?.id?.let { memberId ->
-                listenToPrograms(memberId)
-                listenToWorkouts(memberId)
-            }
         } catch (e: Exception) {
             e.printStackTrace()
             _member.value = null
@@ -138,9 +146,12 @@ class MemberRepository @Inject constructor(
         programsListener = firestore.collection("programs")
             .whereArrayContains("memberIds", memberId)
             .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("MemberRepository", "Error loading programs: ${error.message}")
+                }
                 if (error != null || snapshot == null) return@addSnapshotListener
-
                 val programList = snapshot.documents.mapNotNull { doc ->
+
                     doc.toObject(Program::class.java)
                 }
                 _programs.value = programList
@@ -155,7 +166,10 @@ class MemberRepository @Inject constructor(
             .collection("workouts")
             .addSnapshotListener { snapshot, _ ->
                 snapshot?.let {
-                    val result = it.documents.mapNotNull { doc -> doc.toObject(Workout::class.java) }
+                    val result =
+                        it.documents.mapNotNull { doc ->
+                            doc.toObject(Workout::class.java)
+                        }
                     _workouts.value = result.sortedBy { workout -> workout.completedAt ?: 0 }
                 }
             }
@@ -189,14 +203,15 @@ class MemberRepository @Inject constructor(
     }
 
     fun getStreakDataStats(): StreakDataStats? {
-        val pastWorkouts = getPastWorkouts()
+        val pastWorkouts = _pastWorkouts.value
 
         if (pastWorkouts.isEmpty()) return null
 
         val firstDate = Date(pastWorkouts.first().completedAt * 1000L).toStartOfDay()
         val lastDate = Date(pastWorkouts.last().completedAt * 1000L).toStartOfDay()
 
-        val daysBetween = ChronoUnit.DAYS.between(firstDate.toInstant(), lastDate.toInstant()).toInt()
+        val daysBetween =
+            ChronoUnit.DAYS.between(firstDate.toInstant(), lastDate.toInstant()).toInt()
 
         var longest = 0
         var current = 0
@@ -227,64 +242,36 @@ class MemberRepository @Inject constructor(
     }
 
 
-    fun getPastWorkouts(): List<PastWorkout> {
+    private fun calculatePastWorkouts() {
         val published = programs.value.filter { it.status == Program.Status.PUBLISHED.value }
         val workouts = completedWorkouts
-
         val pastList = mutableListOf<PastWorkout>()
 
         for (program in published) {
             val requiredDates = program.requiredWorkoutDays()
-
             for (date in requiredDates) {
                 val didComplete = workouts.any {
                     it.programId == program.id &&
                             Date(it.completedAt!! * 1000L).toStartOfDay() == date.toStartOfDay()
                 }
 
+                val calloriesBurned = workouts.filter {
+                    it.programId == program.id &&
+                            Date(it.completedAt!! * 1000L).toStartOfDay() == date.toStartOfDay()
+                }.sumOf { it.caloriesBurned }
+
                 pastList.add(
                     PastWorkout(
                         completedAt = (date.time / 1000L).toInt(),
                         program = program,
-                        didComplete = didComplete
+                        didComplete = didComplete,
+                        calloriesBurned = calloriesBurned
                     )
                 )
             }
         }
 
-        return pastList.sortedBy { it.completedAt }
+        _pastWorkouts.value = pastList.sortedBy { it.completedAt }
     }
-
-     fun totalCalories(): Int {
-        val programs = programs.value.filter { it.status == Program.Status.PUBLISHED.value }
-
-        if (programs.isEmpty()) return 0
-
-        val allProgramCalories = programs.flatMap { program ->
-            val completedWorkoutsForProgram = completedWorkouts.filter { it.programId == program.id }
-            val requiredDates = program.requiredWorkoutDays()
-
-            requiredDates.map { requiredDate ->
-                completedWorkoutsForProgram
-                    .filter {
-                        val workoutDate = Date(it.completedAt!! * 1000L)
-                        Calendar.getInstance().apply {
-                            time = workoutDate
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }.time == requiredDate
-                    }
-                    .sumOf { it.caloriesBurned }
-            }
-        }
-
-        return allProgramCalories.sum().roundToInt()
-    }
-
-
-
-
 
 }

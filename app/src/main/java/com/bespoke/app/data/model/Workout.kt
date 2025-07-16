@@ -62,7 +62,7 @@ data class _Workout(
 
 data class ExerciseEntryInProgress(
     val currentEntry: ExerciseEntry? = null,
-    val exerciseState: ExerciseState = ExerciseState.SETS_START,
+    val exerciseState: ExerciseState = ExerciseState.setsStart,
     val currentSet: Int = 1,
     val isPaused: Boolean = true,
     val isPausedBtwnRep: Boolean = false,
@@ -70,8 +70,11 @@ data class ExerciseEntryInProgress(
 )
 
 enum class ExerciseState {
-    SETS_START,
-    SET_IN_PROGRESS,
-    SETS_PAUSED,
-    FINISHED
+    setsStart,
+    restBtwnSets,
+    repsStart,
+    restBtwnReps,
+    paused,
+    finished,
+    setsFinished
 }

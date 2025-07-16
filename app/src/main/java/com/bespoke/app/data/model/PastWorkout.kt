@@ -5,7 +5,8 @@ import java.util.Date
 data class PastWorkout(
     val completedAt: Int,
     val program: Program,
-    val didComplete: Boolean
+    val didComplete: Boolean,
+    val calloriesBurned: Double
 )
 
 data class StreakDataStats(

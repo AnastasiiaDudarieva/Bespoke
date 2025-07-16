@@ -38,15 +38,6 @@ fun String.formatPhoneNumber(mask: String = "+XXXX-XXX-XXXX"): String {
     return result.toString().replace("++", "+")
 }
 
-fun Long.toDateWithoutTime(): Date {
-    val cal = Calendar.getInstance()
-    cal.timeInMillis = this * 1000L
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    return cal.time
-}
 
 fun Date.toStartOfDay(): Date {
     val cal = Calendar.getInstance()
@@ -56,5 +47,17 @@ fun Date.toStartOfDay(): Date {
     cal.set(Calendar.SECOND, 0)
     cal.set(Calendar.MILLISECOND, 0)
     return cal.time
+}
+fun Calendar.getDayName(): String {
+    return when (get(Calendar.DAY_OF_WEEK)) {
+        Calendar.SUNDAY    -> "sun"
+        Calendar.MONDAY    -> "mon"
+        Calendar.TUESDAY   -> "tue"
+        Calendar.WEDNESDAY -> "wed"
+        Calendar.THURSDAY  -> "thu"
+        Calendar.FRIDAY    -> "fri"
+        Calendar.SATURDAY  -> "sat"
+        else               -> "unknown"
+    }
 }
 
