@@ -30,7 +30,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
-import com.bespoke.app.ui.viewmodel.HomeViewModel
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.CustomAvatar
 import com.bespoke.app.ui.theme.AfternoonGradient
@@ -38,6 +37,7 @@ import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.EveningGradient
 import com.bespoke.app.ui.theme.MorningGradient
 import com.bespoke.app.ui.theme.TextDark
+import com.bespoke.app.ui.viewmodel.HomeViewModel
 import java.util.Calendar
 
 
@@ -87,12 +87,15 @@ fun HomeScreen(
 
         }
 
-        Text(
-            text = stringResource(salutation.greetingResId, "Anastasiia"),
-            style = MaterialTheme.typography.headlineLarge,
-            color = TextDark,
-            fontFamily = BeatriceFontFamily
-        )
+        member?.firstName?.let { name ->
+            Text(
+                text = stringResource(salutation.greetingResId, name),
+                style = MaterialTheme.typography.headlineLarge,
+                color = TextDark,
+                fontFamily = BeatriceFontFamily
+            )
+        }
+
     }
 }
 
