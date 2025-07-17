@@ -1,7 +1,6 @@
 package com.bespoke.app.ui.theme
 
 import androidx.compose.material3.Typography
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -22,11 +21,18 @@ val Typography = Typography(
     titleSmall = TextStyle(
         fontFamily = BeatriceFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 24.sp),
+        fontSize = 24.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = BeatriceFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 24.sp
+    ),
     titleLarge = TextStyle(
         fontFamily = BeatriceFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 32.sp),
+        fontSize = 32.sp
+    ),
     bodyLarge = TextStyle(
         fontFamily = BeatriceFontFamily,
         fontWeight = FontWeight.Normal,
@@ -37,11 +43,16 @@ val Typography = Typography(
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp
     ),
+
 //    for caps title
     labelLarge = TextStyle(
         fontFamily = BeatriceFontFamily,
         fontWeight = FontWeight.W600,
         fontSize = 12.sp
     ),
-
+    labelSmall = TextStyle(
+        fontFamily = BeatriceFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp
+    ),
 )

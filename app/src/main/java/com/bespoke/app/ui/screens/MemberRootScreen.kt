@@ -4,6 +4,7 @@ import SetStatusBarIconsDark
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -68,7 +69,7 @@ fun MemberRootScreen(
                         label = {
                             Text(
                                 text = tab.label,
-                                color =  if (currentTab == tab) {
+                                color = if (currentTab == tab) {
                                     BespokeBlue
                                 } else {
                                     TextDark
@@ -84,12 +85,16 @@ fun MemberRootScreen(
                 }
             }
         }
-    ) { _ ->
-        Box(modifier = Modifier.fillMaxSize()) {
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = paddingValues.calculateBottomPadding())
+        ) {
             when (currentTab) {
-                is TabItem.Home -> HomeScreen(navController )
+                is TabItem.Home -> HomeScreen(navController)
                 is TabItem.Schedule -> Text("Schedule")
-                is TabItem.Programs -> Text("Programs")
+                is TabItem.Programs -> ProgramsScreen(navController)
                 is TabItem.Guidance -> Text("Guidance")
             }
         }

@@ -43,4 +43,7 @@
     <string name="address_">Address*</string>
     <string name="date_of_birth_">Date of Birth*</string>
     <string name="invalid_date_selected">Invalid date selected</string>
+    <string name="upcoming_programs_header">Upcoming Programs</string>
+    <string name="upcoming_programs_empty_title">No upcoming programs have been published.</string>
+    <string name="upcoming_programs_empty_message"><![CDATA[Message your provider to get started with personalized fitness & recovery programs.]]></string>
 </resources>

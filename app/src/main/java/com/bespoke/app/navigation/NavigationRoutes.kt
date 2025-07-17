@@ -7,6 +7,7 @@ object Screen {
     const val ACCOUNT = "account"
     const val EDIT_ACCOUNT = "editAccount"
     const val WEB_VIEW = "webView"
+    const val PROGRAM = "program"
 
     fun webViewWithUrl(url: String): String {
         return "$WEB_VIEW?url=$url"

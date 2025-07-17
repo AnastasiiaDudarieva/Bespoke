@@ -7,7 +7,7 @@ data class Workout(
     @DocumentId var id: String? = null,
     val startedAt: Int = 0,
     val completedAt: Int? = null,
-//    val completedExerciseEntries: Map<String, ExerciseFeedback> = emptyMap(),
+    val completedExerciseEntries: Map<String, ExerciseFeedback>? = null,
     val exerciseEntryInProgress: ExerciseEntryInProgress = ExerciseEntryInProgress(),
     val programId: String = "",
     val _program: Program? = null,
@@ -23,7 +23,7 @@ data class Workout(
 ) {
     val _workout: _Workout?
         get() = if (id != null && completedAt != null && effort != null) {
-            _Workout(id!!, completedAt!!, effort!!, programId)
+            _Workout(id!!, completedAt, effort, programId)
         } else null
 
 //    companion object {
@@ -58,6 +58,15 @@ data class _Workout(
     val completedAt: Int,
     val effort: Double,
     val programId: String
+)
+
+data class ExerciseFeedback(
+    var textMessage: String = "",
+//    var media: List<Media> = emptyList(),
+    var status: String? = null,
+    var totalSets: Int? = null,
+    var skipedSets: List<Int> = emptyList(),
+    var finishedSets: List<Int> = emptyList()
 )
 
 data class ExerciseEntryInProgress(

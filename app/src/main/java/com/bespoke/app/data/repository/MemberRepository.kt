@@ -7,6 +7,7 @@ import com.bespoke.app.data.model.PastWorkout
 import com.bespoke.app.data.model.Program
 import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.model.Workout
+import com.bespoke.app.data.model.requiredWorkoutDays
 import com.bespoke.app.data.services.AuthService
 import com.bespoke.app.utils.toStartOfDay
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream
@@ -86,6 +87,7 @@ class MemberRepository @Inject constructor(
         try {
             val document = firestore.collection("members").document(userId).get().await()
             val loadedMember = document.toObject(Member::class.java)
+            Log.d("MemberRepository", "Loaded member: $loadedMember")
             _member.value = loadedMember
         } catch (e: Exception) {
             e.printStackTrace()
@@ -105,6 +107,7 @@ class MemberRepository @Inject constructor(
         clearMember()
     }
 
+    //TODO: Add ime type
     suspend fun uploadProfileImage(bitmap: Bitmap): String? {
         val currentUser = auth.currentUserId() ?: return null
         val storageRef = Firebase.storage.reference
