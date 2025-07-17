@@ -64,16 +64,6 @@ class MemberRepository @Inject constructor(
         currentUserId()?.let { uid ->
             CoroutineScope(Dispatchers.IO).launch {
                 loadMemberById(uid)
-                startListeningForMemberChanges(uid)
-                listenToPrograms(uid)
-                listenToWorkouts(uid)
-
-                launch {
-                    combine(programs, workouts) { _, _ -> }
-                        .collect {
-                            calculatePastWorkouts()
-                        }
-                }
             }
         }
     }
@@ -92,6 +82,14 @@ class MemberRepository @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             _member.value = null
+        } finally {
+            startListeningForMemberChanges(userId)
+            listenToPrograms(userId)
+            listenToWorkouts(userId)
+            combine(programs, workouts) { _, _ -> }
+                .collect {
+                    calculatePastWorkouts()
+                }
         }
     }
 
@@ -145,6 +143,7 @@ class MemberRepository @Inject constructor(
     }
 
     private fun listenToPrograms(memberId: String) {
+        Log.e("listenToPrograms", "called with memberId: $memberId")
         programsListener?.remove()
         programsListener = firestore.collection("programs")
             .whereArrayContains("memberIds", memberId)

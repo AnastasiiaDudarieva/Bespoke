@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ import com.bespoke.app.ui.components.programs.TodayWorkoutRow
 import com.bespoke.app.ui.components.programs.UpcomingProgramRow
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.ProgramsViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun ProgramsScreen(
@@ -43,6 +45,14 @@ fun ProgramsScreen(
     val viewModel: ProgramsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberLazyListState()
+
+    val todayProgramsIndex = uiState.pastWorkouts.size
+
+    LaunchedEffect(uiState.todayPrograms) {
+        if (uiState.todayWorkouts.isNotEmpty() && uiState.todayPrograms.isNotEmpty()) {
+            scrollState.scrollToItem(todayProgramsIndex)
+        }
+    }
 
 
     Surface(

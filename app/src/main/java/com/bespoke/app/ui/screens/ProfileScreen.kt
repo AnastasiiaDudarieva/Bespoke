@@ -69,6 +69,7 @@ fun ProfileScreen(
 
     val homeViewModel: HomeViewModel = hiltViewModel()
     val member by homeViewModel.member.collectAsState()
+    val statistic by homeViewModel.statistics.collectAsState()
     val isUploadingAvatar by homeViewModel.isUploadingAvatar.collectAsState()
 
 
@@ -186,11 +187,11 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                StatsCard(ProfileStatsType.Streak, value = homeViewModel.getLongestStreakDisplay())
+                StatsCard(ProfileStatsType.Streak, value = statistic.longestStreak)
                 Spacer(modifier = Modifier.height(8.dp))
-                StatsCard(ProfileStatsType.Programs, value = homeViewModel.getCompletedProgramCount())
+                StatsCard(ProfileStatsType.Programs, value = statistic.completedPrograms)
                 Spacer(modifier = Modifier.height(8.dp))
-                StatsCard(ProfileStatsType.Calories, value = homeViewModel.getTotalBurnedCalories())
+                StatsCard(ProfileStatsType.Calories, value = statistic.totalCaloriesBurned)
                 Spacer(modifier = Modifier.height(8.dp))
                 StatsCard(ProfileStatsType.WorkoutTime, value = "1400 Min")
 

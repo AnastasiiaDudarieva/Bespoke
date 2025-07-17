@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.PastWorkout
@@ -12,12 +13,9 @@ import com.bespoke.app.utils.toStartOfDay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,10 +51,6 @@ class ProgramsViewModel @Inject constructor(
             add(Calendar.DAY_OF_YEAR, 1)
         }.time
 
-        val pastCompletedWorkouts = allWorkouts.filterNot {
-            Date(it.completedAt!! * 1000L).toStartOfDay() == today
-        }
-
         val completedWorkoutsToday = allWorkouts.filter {
             Date(it.completedAt!! * 1000L).toStartOfDay() == today
         }
@@ -86,7 +80,7 @@ class ProgramsViewModel @Inject constructor(
         }
         _uiState.value = ProgramsUiState(
             pastWorkouts = pastWorkouts,
-            todayWorkouts = todaysWorkouts,
+            todayWorkouts = todaysWorkouts.sortedBy { it._program?.createdAt ?: 0L },
             todayPrograms = todaysPrograms,
             upcomingPrograms = upcomingPrograms
         )

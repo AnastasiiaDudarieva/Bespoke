@@ -3,8 +3,6 @@ package com.bespoke.app.ui.viewmodel
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.ui.components.base.imageBitmapCache
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,9 +18,37 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val member = memberRepository.member
+    private val _statistics = MutableStateFlow(Statistics("0 Days", "0 Complete", "0 Burned"))
+    val statistics = _statistics.asStateFlow()
 
     private val _isUploadingAvatar = MutableStateFlow(false)
     val isUploadingAvatar = _isUploadingAvatar.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            memberRepository.pastWorkouts.collect { pastWorkouts ->
+                if (pastWorkouts.isNotEmpty()) {
+                    val longest = memberRepository.getStreakDataStats()?.longestStreak ?: 0
+                    val completedPrograms =
+                        memberRepository.pastWorkouts.value.count { it.didComplete }
+                    val totalCalories =
+                        memberRepository.pastWorkouts.value.sumOf { it.calloriesBurned }
+                            .roundToInt()
+
+                    val statistics = Statistics(
+                        if (longest == 1) "1 Day" else "$longest Days",
+                        "$completedPrograms Complete",
+                        "$totalCalories Burned"
+                    )
+                    _statistics.value = statistics
+                } else {
+                    _statistics.value = Statistics("0 Days", "0 Complete", "0 Burned")
+                }
+            }
+        }
+
+
+    }
 
     fun uploadProfileImage(image: Bitmap) {
         viewModelScope.launch {
@@ -41,23 +67,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun getLongestStreakDisplay(): String {
-        val longest = memberRepository.getStreakDataStats()?.longestStreak ?: 0
-        return if (longest == 1) "1 Day" else "$longest Days"
-    }
-
-    fun getCompletedProgramCount(): String {
-        val completedPrograms = memberRepository.pastWorkouts.value.count { it.didComplete }
-        return "$completedPrograms Complete"
-    }
-
-    fun getTotalBurnedCalories(): String{
-        val totalCalories = memberRepository.pastWorkouts.value.sumOf { it.calloriesBurned }.roundToInt()
-        return "$totalCalories Burned"
-    }
 
     fun logout() {
         memberRepository.logout()
     }
 
 }
+
+data class Statistics(
+    val longestStreak: String,
+    val completedPrograms: String,
+    val totalCaloriesBurned: String,
+)
