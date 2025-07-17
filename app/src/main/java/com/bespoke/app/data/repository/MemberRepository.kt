@@ -143,7 +143,6 @@ class MemberRepository @Inject constructor(
     }
 
     private fun listenToPrograms(memberId: String) {
-        Log.e("listenToPrograms", "called with memberId: $memberId")
         programsListener?.remove()
         programsListener = firestore.collection("programs")
             .whereArrayContains("memberIds", memberId)
