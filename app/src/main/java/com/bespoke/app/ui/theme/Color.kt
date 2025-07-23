@@ -12,13 +12,11 @@ val BorderGrayColor = Color(0xFFB2B6B9)
 val Orange = Color(0xFFFF9034)
 val Green = Color(0xFF1DD75B)
 
-
-
 val NavBarBackgroundColor = Color(0xFFF9FAFB)
 
 val MorningGradient = listOf(Color(0xFFC6F1F1), Color(0xFFFFD934))
 val AfternoonGradient = listOf(Color(0xFFA4B9FE), Color(0xFFC6F1F0))
-val EveningGradient = listOf(Color(0xFFFF9034), Orange)
+val EveningGradient = listOf(Orange, Color(0xFF729DF4))
 
 val StreakColor = Color(0xFFEFEBF5)
 val ProgramsColor = Color(0xFFE8F2F5)

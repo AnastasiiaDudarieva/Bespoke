@@ -1,6 +1,5 @@
 package com.bespoke.app.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.PastWorkout
@@ -22,8 +21,6 @@ import javax.inject.Inject
 class ProgramsViewModel @Inject constructor(
     private val memberRepository: MemberRepository,
 ) : ViewModel() {
-
-    private val calendar = Calendar.getInstance()
 
     private val _uiState = MutableStateFlow(ProgramsUiState())
     val uiState: StateFlow<ProgramsUiState> = _uiState
@@ -93,7 +90,6 @@ class ProgramsViewModel @Inject constructor(
         return calendar.getDayName()
     }
 }
-
 
 data class ProgramsUiState(
     val pastWorkouts: List<PastWorkout> = emptyList(),

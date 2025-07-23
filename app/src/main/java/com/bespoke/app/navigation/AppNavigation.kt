@@ -14,6 +14,7 @@ import com.bespoke.app.ui.screens.AccountScreen
 import com.bespoke.app.ui.screens.EditMemberProfileScreen
 import com.bespoke.app.ui.screens.MemberRootScreen
 import com.bespoke.app.ui.screens.ProfileScreen
+import com.bespoke.app.ui.screens.ProgramOverviewScreen
 import com.bespoke.app.ui.screens.SettingsScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
 
@@ -52,6 +53,13 @@ fun AppNavigation() {
                 ) { backStackEntry ->
                     val url = backStackEntry.arguments?.getString("url") ?: ""
                     WebViewScreen(url = url, navController = navController)
+                }
+                composable(
+                    route = "${Screen.PROGRAM_OVERVIEW}?programId={programId}",
+                    arguments = listOf(navArgument("programId") { defaultValue = ""; nullable = false })
+                ) { backStackEntry ->
+                    val programId = backStackEntry.arguments?.getString("programId") ?: ""
+                    ProgramOverviewScreen(programId = programId, navController = navController)
                 }
             }
         }

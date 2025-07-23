@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.components.programs.NoUpcomingProgramsMessage
 import com.bespoke.app.ui.components.programs.NotStartedProgramView
@@ -34,7 +35,6 @@ import com.bespoke.app.ui.components.programs.TodayWorkoutRow
 import com.bespoke.app.ui.components.programs.UpcomingProgramRow
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.ProgramsViewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun ProgramsScreen(
@@ -75,7 +75,9 @@ fun ProgramsScreen(
                 itemsIndexed(uiState.pastWorkouts) { _, pastWorkout ->
                     PastWorkoutRow(
                         pastWorkout,
-                        onClick = { })
+                        onClick = {
+                            navController.navigate("${Screen.PROGRAM_OVERVIEW}?programId=${pastWorkout.program.id}")
+                        })
                     HorizontalDivider(
                         color = Color.Transparent,
                         thickness = 12.dp,

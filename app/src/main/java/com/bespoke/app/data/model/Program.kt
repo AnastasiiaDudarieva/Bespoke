@@ -42,6 +42,7 @@ data class ProgramSection(
 
 data class ExerciseEntry(
     val id: String? = null,
+    val name: String? = null,
     val exerciseId: String? = null,
     val equipmentIds: List<String>? = null,
     val basedType: String = "Reps", // "Time & Reps", "Time", "Reps"
@@ -51,7 +52,8 @@ data class ExerciseEntry(
     val sets: Int = 3,
     val rest: Int = 30,
     val comments: String? = null,
-//    val mediaList: List<String>? = null,
+    val exerciseMedia: List<Media>? = null,
+    val mediaList: List<Media>? = null,
 )
 
 data class UpcomingProgram(

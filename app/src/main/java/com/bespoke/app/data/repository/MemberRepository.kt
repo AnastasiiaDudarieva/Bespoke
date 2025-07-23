@@ -2,6 +2,8 @@ package com.bespoke.app.data.repository
 
 import android.graphics.Bitmap
 import android.util.Log
+import com.bespoke.app.data.model.Media
+import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
 import com.bespoke.app.data.model.PastWorkout
 import com.bespoke.app.data.model.Program
@@ -25,6 +27,7 @@ import kotlinx.coroutines.tasks.await
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
@@ -274,5 +277,57 @@ class MemberRepository @Inject constructor(
 
         _pastWorkouts.value = pastList.sortedBy { it.completedAt }
     }
+
+    suspend fun loadExerciseData(program: Program): Program {
+        val exerciseIds = program.sections?.flatMap { section ->
+                section.entries.orEmpty().mapNotNull { it.exerciseId }
+            }?.toSet()?: emptySet()
+
+        val idToData = mutableMapOf<String, Pair<String?, List<Media>?>>()
+
+        for (id in exerciseIds) {
+            try {
+                val docSnapshot = firestore.collection("exercises").document(id).get().await()
+                val data = docSnapshot.data ?: continue
+
+                val name = data["name"] as? String
+
+                val mediaMap = data["media"] as? Map<*, *>
+                val mediaList = mediaMap?.let {
+                    try {
+                        listOf(
+                            Media(
+                                id = UUID.randomUUID().toString(),
+                                createdAt = (it["createdAt"] as? Number)?.toLong() ?: 0L,
+                                kind = MediaKind.fromString(it["kind"] as? String ?: "image").toString(),
+                                path = it["path"] as? String ?: "",
+                                thumbnailPath = it["thumbnailPath"] as? String,
+                                squarePath = it["squarePath"] as? String,
+                                lengthSec = (it["lengthSec"] as? Number)?.toInt()
+                            )
+                        )
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+
+                idToData[id] = Pair(name, mediaList)
+
+            } catch (_: Exception) {
+                // skip
+            }
+        }
+
+        val updatedSections = program.sections?.map { section ->
+            val updatedEntries = section.entries?.map { entry ->
+                val (name, media) = idToData[entry.exerciseId ?: ""] ?: (null to null)
+                entry.copy(name = name, exerciseMedia = media)
+            }
+            section.copy(entries = updatedEntries)
+        }
+
+        return program.copy(sections = updatedSections)
+    }
+
 
 }

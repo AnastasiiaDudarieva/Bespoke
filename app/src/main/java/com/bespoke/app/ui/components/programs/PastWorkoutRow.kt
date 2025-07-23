@@ -15,16 +15,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +31,6 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.R
 import com.bespoke.app.data.model.PastWorkout
-import com.bespoke.app.data.model.Program
 import com.bespoke.app.data.model.lengthDisplay
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BorderGrayColor
@@ -46,7 +39,6 @@ import com.bespoke.app.ui.theme.InputBackgroundColor
 import com.bespoke.app.ui.theme.Orange
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.theme.White
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,12 +47,8 @@ import java.util.Locale
 fun PastWorkoutRow(
     pastWorkout: PastWorkout,
     modifier: Modifier = Modifier,
-    onClick: suspend (Program) -> Unit
+    onClick:()-> Unit,
 ) {
-    var isLoading by remember { mutableStateOf(false) }
-
-    val coroutineScope = rememberCoroutineScope()
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -70,12 +58,8 @@ fun PastWorkoutRow(
                 color = BorderGrayColor,
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable(enabled = !isLoading) {
-                coroutineScope.launch {
-                    isLoading = true
-                    onClick(pastWorkout.program)
-                    isLoading = false
-                }
+            .clickable {
+              onClick()
             }
             .padding(24.dp)
     ) {
@@ -95,7 +79,8 @@ fun PastWorkoutRow(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                val iconRes = if (pastWorkout.didComplete) R.drawable.ic_check else R.drawable.ic_close
+                val iconRes =
+                    if (pastWorkout.didComplete) R.drawable.ic_check else R.drawable.ic_close
                 val iconTint = if (pastWorkout.didComplete) TextDark else White
                 val circleColor = if (pastWorkout.didComplete) Green else Orange
 
@@ -123,7 +108,7 @@ fun PastWorkoutRow(
                 lineHeight = 24.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
-                )
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -137,13 +122,13 @@ fun PastWorkoutRow(
                     color = TextDark.copy(alpha = 0.5f)
                 )
 
-                if (isLoading) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+//                if (isLoading) {
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    CircularProgressIndicator(
+//                        strokeWidth = 2.dp,
+//                        modifier = Modifier.size(16.dp)
+//                    )
+//                }
 
                 Spacer(modifier = Modifier.weight(1f))
             }
