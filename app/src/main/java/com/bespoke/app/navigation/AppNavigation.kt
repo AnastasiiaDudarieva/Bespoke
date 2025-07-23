@@ -15,6 +15,7 @@ import com.bespoke.app.ui.screens.EditMemberProfileScreen
 import com.bespoke.app.ui.screens.MemberRootScreen
 import com.bespoke.app.ui.screens.ProfileScreen
 import com.bespoke.app.ui.screens.ProgramOverviewScreen
+import com.bespoke.app.ui.screens.ProgramsScreen
 import com.bespoke.app.ui.screens.SettingsScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
 
@@ -53,6 +54,9 @@ fun AppNavigation() {
                 ) { backStackEntry ->
                     val url = backStackEntry.arguments?.getString("url") ?: ""
                     WebViewScreen(url = url, navController = navController)
+                }
+                composable(Screen.PROGRAMS) {
+                    ProgramsScreen(navController = navController)
                 }
                 composable(
                     route = "${Screen.PROGRAM_OVERVIEW}?programId={programId}",

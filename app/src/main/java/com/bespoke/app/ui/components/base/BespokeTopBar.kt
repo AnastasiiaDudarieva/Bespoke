@@ -15,6 +15,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.TextDark
 
@@ -33,6 +34,8 @@ fun BespokeTopBar(
                 Text(
                     fontFamily = BeatriceFontFamily,
                     text = title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = color
                 )
             }

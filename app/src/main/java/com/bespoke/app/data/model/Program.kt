@@ -14,7 +14,7 @@ data class Program(
     val updatedAt: Long? = null,
     val days: List<String>? = null, // sun, mon...
     val focus: String? = null,
-    val sections: List<ProgramSection>? = null,
+    val sections: List<ProgramSection> = emptyList(),
     val status: String? = null,
     val providerId: String? = null,
     val memberIds: List<String>? = null,
@@ -80,7 +80,7 @@ fun Program.requiredWorkoutDays(): List<Date> {
 }
 
 fun Program.lengthDisplay(): String {
-    val exerciseEntries = sections?.flatMap { it.entries!! } ?: emptyList()
+    val exerciseEntries = sections.flatMap { it.entries!! } ?: emptyList()
     var exerciseTime = 0f
     for (entry in exerciseEntries) {
         exerciseTime += (entry.sets * entry.timeForUse()).toFloat()
@@ -95,3 +95,4 @@ fun ExerciseEntry.timeForUse(): Int {
         else -> 3 * reps
     }
 }
+

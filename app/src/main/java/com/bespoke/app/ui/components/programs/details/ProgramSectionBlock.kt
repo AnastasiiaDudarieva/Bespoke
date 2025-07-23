@@ -3,36 +3,53 @@ package com.bespoke.app.ui.components.programs.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.bespoke.app.data.model.ExerciseEntry
+import androidx.compose.ui.unit.sp
 import com.bespoke.app.data.model.ProgramSection
+import com.bespoke.app.ui.theme.BeatriceFontFamily
+import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
 
 @Composable
 fun ProgramSectionBlock(
     section: ProgramSection,
     index: Int,
-    onSelect: (ExerciseEntry) -> Unit
+    viewModel: ProgramOverviewViewModel,
 ) {
     Column(
         modifier = Modifier
             .padding(horizontal = 24.dp)
-            .padding(bottom = 64.dp)
     ) {
         Row(
-            modifier = Modifier.padding(top = 64.dp),
+            modifier = Modifier.padding(top = 48.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(section.title?:"", fontWeight = FontWeight.Bold)
-            Text(String.format("%02d", index))
+            Text(
+                section.title ?: "",
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .weight(1f),
+                fontFamily = BeatriceFontFamily,
+                fontWeight = FontWeight.W600
+            )
+            Text(
+                String.format("%02d", index),
+                fontSize = 14.sp,
+                fontFamily = BeatriceFontFamily,
+                fontWeight = FontWeight.W600
+            )
         }
 
         section.entries?.forEach { entry ->
-            ExerciseEntryRow(entry = entry)
+            ExerciseEntryRow(entry = entry, viewModel = viewModel)
         }
+        Spacer(Modifier.height(48.dp))
+
     }
 }

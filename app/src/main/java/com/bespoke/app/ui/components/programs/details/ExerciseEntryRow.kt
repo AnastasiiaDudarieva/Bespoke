@@ -1,31 +1,51 @@
 package com.bespoke.app.ui.components.programs.details
 
-import androidx.compose.foundation.Image
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.Comment
+import androidx.compose.material.icons.filled.FormatAlignLeft
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.VerticalDistribute
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.bespoke.app.data.model.ExerciseEntry
+import com.bespoke.app.data.model.MediaKind
+import com.bespoke.app.ui.components.base.FirebaseStorageImageView
+import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
 
 @Composable
 fun ExerciseEntryRow(
     entry: ExerciseEntry,
     state: ExerciseState = ExerciseState.NotStarted,
-    imageUrl: String? = null // Якщо ти хочеш передавати URL ззовні (як після loadExerciseData)
+    imageUrl: String? = null,
+    viewModel: ProgramOverviewViewModel
 ) {
     var url by remember { mutableStateOf(imageUrl) }
 
@@ -33,8 +53,7 @@ fun ExerciseEntryRow(
         if (url == null) {
             val square = entry.exerciseMedia?.firstOrNull()?.squarePath
             if (square != null) {
-                // Тут припускаємо, що є метод який повертає url з gs://
-                url = resolveFirebaseUrl(square)
+                url = viewModel.resolveFirebaseUrl(square)
             }
         }
     }
@@ -45,15 +64,16 @@ fun ExerciseEntryRow(
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = url,
-            contentDescription = null,
-            modifier = Modifier
-                .size(112.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color.LightGray),
-            contentScale = ContentScale.Crop
-        )
+        url?.let {
+            FirebaseStorageImageView(
+                gsPath = it,
+                modifier = Modifier
+                    .size(112.dp)
+                    .background(Color.LightGray),
+                contentScale = ContentScale.Crop,
+                cornerRadius = 4
+            )
+        }
 
         Spacer(modifier = Modifier.width(24.dp))
 
@@ -66,11 +86,11 @@ fun ExerciseEntryRow(
                 color = Color.Black
             )
 
-//            Text(
-////                text = entry.parameterListString ?: "",
-//                fontSize = 14.sp,
-//                color = Color.Gray
-//            )
+            Text(
+                text = viewModel.parameterListString(entry),
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
 
             when (state) {
                 ExerciseState.Complete -> StatusLabel("Completed", Color(0xFF9E9E9E))
@@ -78,11 +98,13 @@ fun ExerciseEntryRow(
                 else -> {}
             }
 
+            Log.e("entry.mediaList", "${entry.mediaList}")
             Row(verticalAlignment = Alignment.CenterVertically) {
                 entry.mediaList?.forEach { item ->
                     val icon = when (item.kind?.lowercase()) {
                         "video" -> Icons.Default.PlayCircle
                         "audio" -> Icons.Default.Audiotrack
+                        "image" -> Icons.Default.Image
                         else -> null
                     }
 
@@ -93,19 +115,19 @@ fun ExerciseEntryRow(
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .padding(end = 4.dp)
-                                .size(15.dp)
+                                .size(16.dp)
                         )
                     }
                 }
 
                 if (!entry.comments.isNullOrEmpty()) {
                     Icon(
-                        imageVector = Icons.Default.Comment,
+                        imageVector = Icons.AutoMirrored.Filled.FormatAlignLeft,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .padding(end = 4.dp)
-                            .size(15.dp)
+                            .size(16.dp)
                     )
                 }
 
@@ -138,9 +160,3 @@ enum class ExerciseState {
     NotStarted, InProgress, Complete, preActive
 }
 
-// Заглушка — заміни своїм кодом
-suspend fun resolveFirebaseUrl(path: String): String {
-    // TODO: Отримай URL з FirebaseStorage, наприклад:
-    // Firebase.storage.getReference(path).downloadUrl.await().toString()
-    return "https://via.placeholder.com/112"
-}

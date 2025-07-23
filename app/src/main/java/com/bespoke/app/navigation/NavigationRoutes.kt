@@ -7,7 +7,7 @@ object Screen {
     const val ACCOUNT = "account"
     const val EDIT_ACCOUNT = "editAccount"
     const val WEB_VIEW = "webView"
-    const val PROGRAM = "program"
+    const val PROGRAMS = "programs"
     const val PROGRAM_OVERVIEW = "program_overview"
 
 

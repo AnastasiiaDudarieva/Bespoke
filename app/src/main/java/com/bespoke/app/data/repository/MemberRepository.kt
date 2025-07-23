@@ -302,9 +302,9 @@ class MemberRepository @Inject constructor(
     }
 
     suspend fun loadExerciseData(program: Program): Program {
-        val exerciseIds = program.sections?.flatMap { section ->
-                section.entries.orEmpty().mapNotNull { it.exerciseId }
-            }?.toSet()?: emptySet()
+        val exerciseIds = program.sections.flatMap { section ->
+            section.entries.orEmpty().mapNotNull { it.exerciseId }
+        }.toSet()
 
         val idToData = mutableMapOf<String, Pair<String?, List<Media>?>>()
 
@@ -322,7 +322,8 @@ class MemberRepository @Inject constructor(
                             Media(
                                 id = UUID.randomUUID().toString(),
                                 createdAt = (it["createdAt"] as? Number)?.toLong() ?: 0L,
-                                kind = MediaKind.fromString(it["kind"] as? String ?: "image").toString(),
+                                kind = MediaKind.fromString(it["kind"] as? String ?: "image")
+                                    .toString(),
                                 path = it["path"] as? String ?: "",
                                 thumbnailPath = it["thumbnailPath"] as? String,
                                 squarePath = it["squarePath"] as? String,
@@ -341,7 +342,7 @@ class MemberRepository @Inject constructor(
             }
         }
 
-        val updatedSections = program.sections?.map { section ->
+        val updatedSections = program.sections.map { section ->
             val updatedEntries = section.entries?.map { entry ->
                 val (name, media) = idToData[entry.exerciseId ?: ""] ?: (null to null)
                 entry.copy(name = name, exerciseMedia = media)
@@ -351,6 +352,5 @@ class MemberRepository @Inject constructor(
 
         return program.copy(sections = updatedSections)
     }
-
 
 }

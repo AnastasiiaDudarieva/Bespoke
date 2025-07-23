@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +53,7 @@ import androidx.navigation.NavHostController
 import com.bespoke.app.R
 import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.lengthDisplay
+import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.components.base.FirebaseStorageImageView
 import com.bespoke.app.ui.components.programs.details.EquipmentNeeded
 import com.bespoke.app.ui.components.programs.details.ProgramSectionBlock
@@ -80,7 +82,6 @@ fun ProgramOverviewScreen(
     }
 
     val program = programState ?: return
-    var selectedEntry by remember { mutableStateOf<ExerciseEntry?>(null) }
     val scrollState = rememberLazyListState()
 
     val showCollapsedHeader by remember {
@@ -191,12 +192,15 @@ fun ProgramOverviewScreen(
                 EquipmentNeeded(program = program, viewModel)
             }
 
-            itemsIndexed(program.sections ?: emptyList()) { index, section ->
+            itemsIndexed(program.sections) { index, section ->
                 ProgramSectionBlock(
                     section = section,
                     index = index + 1,
-                    onSelect = { selectedEntry = it }
+                    viewModel = viewModel
                 )
+                if (index < program.sections.lastIndex) {
+                    HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
+                }
             }
 
             item { Spacer(modifier = Modifier.height(100.dp)) }
@@ -206,21 +210,19 @@ fun ProgramOverviewScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(toolbarColor)
-                .padding(bottom = 4.dp, top = 4.dp, start = 16.dp)
                 .statusBarsPadding(),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    if (showCollapsedHeader) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    } else {
+                if (!showCollapsedHeader) {
+                    IconButton(
+                        onClick = { navController.navigateUp() },
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 4.dp)
+                    ) {
+
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -241,15 +243,14 @@ fun ProgramOverviewScreen(
                     label = "TitleSwitch"
                 ) { show ->
                     if (show) {
-                        Text(
-                            text = program.title ?: "",
-                            fontFamily = BeatriceFontFamily,
-                            fontSize = 24.sp,
-                            color = TextDark,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        )
-
+                        Column {
+                            BespokeTopBar(
+                                title = program.title ?: "",
+                                canNavigateBack = true,
+                                onBackClick = { navController.navigateUp() }
+                            )
+                            HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
+                        }
                     } else {
                         Spacer(Modifier.width(0.dp))
                     }

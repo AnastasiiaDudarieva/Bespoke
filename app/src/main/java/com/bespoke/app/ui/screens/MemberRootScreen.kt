@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.NavBarBackgroundColor
@@ -94,7 +95,7 @@ fun MemberRootScreen(
             when (currentTab) {
                 is TabItem.Home -> HomeScreen(navController)
                 is TabItem.Schedule -> Text("Schedule")
-                is TabItem.Programs -> ProgramsScreen(navController)
+                is TabItem.Programs -> navController.navigate(Screen.PROGRAMS)
                 is TabItem.Guidance -> Text("Guidance")
             }
         }
