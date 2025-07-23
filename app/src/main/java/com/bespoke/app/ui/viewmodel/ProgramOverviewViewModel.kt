@@ -12,12 +12,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProgramOverviewViewModel @Inject constructor(
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
 ) : ViewModel() {
 
     val programs = memberRepository.programs
     private val _program = MutableStateFlow<Program?>(null)
     val program: StateFlow<Program?> = _program
+
+    fun getEquipmentLabelById(id: String) = memberRepository.getEquipmentLabelById(id)
 
     fun loadProgramData(program: Program) {
         viewModelScope.launch {

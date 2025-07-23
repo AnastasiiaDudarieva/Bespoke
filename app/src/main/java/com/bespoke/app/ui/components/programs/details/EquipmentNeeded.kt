@@ -1,10 +1,12 @@
 package com.bespoke.app.ui.components.programs.details
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,12 +24,14 @@ import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
 
 @Composable
 fun EquipmentNeeded(program: Program, viewModel: ProgramOverviewViewModel) {
+
     val equipmentLabels = remember(program) {
+        Log.e("program", "${program}")
         program.sections?.flatMap { it.entries ?: emptyList() }
             ?.flatMap { it.equipmentIds.orEmpty() }
-//            ?.mapNotNull { id -> viewModel.getEquipmentLabelById(id) }
-//            .toSet()
-//            .sorted()
+            ?.mapNotNull { id -> viewModel.getEquipmentLabelById(id) }
+            ?.toSet()
+            ?.sorted() ?: emptyList()
     }
 
     Column(
@@ -44,6 +48,9 @@ fun EquipmentNeeded(program: Program, viewModel: ProgramOverviewViewModel) {
             color = TextDark
         )
         Spacer(Modifier.padding(8.dp))
-//        Text(equipmentLabels?.joinToString("  •  "))
+        Text(
+            text = equipmentLabels.joinToString("  •  "),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }

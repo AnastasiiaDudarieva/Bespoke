@@ -2,6 +2,7 @@ package com.bespoke.app.data.repository
 
 import android.graphics.Bitmap
 import android.util.Log
+import com.bespoke.app.data.model.Equipment
 import com.bespoke.app.data.model.Media
 import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
@@ -52,6 +53,8 @@ class MemberRepository @Inject constructor(
     private val _pastWorkouts = MutableStateFlow<List<PastWorkout>>(emptyList())
     val pastWorkouts: StateFlow<List<PastWorkout>> = _pastWorkouts
 
+    private var equipments: List<Equipment> = emptyList()
+        private set
 
     val completedWorkouts: List<Workout>
         get() = workouts.value
@@ -69,6 +72,7 @@ class MemberRepository @Inject constructor(
                 loadMemberById(uid)
             }
         }
+        loadEquipments()
     }
 
     fun currentUserId() = auth.currentUserId()
@@ -94,6 +98,25 @@ class MemberRepository @Inject constructor(
                     calculatePastWorkouts()
                 }
         }
+    }
+    private fun loadEquipments() {
+        if (equipments.isNotEmpty())
+            return
+        FirebaseFirestore.getInstance()
+            .collection("equipments")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                equipments = snapshot.documents.mapNotNull {
+                    it.toObject(Equipment::class.java)
+                }.sortedBy { it.label }
+            }
+            .addOnFailureListener {
+                Log.e("loadEquipments", "Error loading equipments: ${it.message}")
+            }
+    }
+
+    fun getEquipmentLabelById(id: String): String? {
+        return equipments.firstOrNull { it.id == id }?.label
     }
 
     private fun clearMember() {
