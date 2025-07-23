@@ -83,6 +83,8 @@ class ProgramsViewModel @Inject constructor(
         )
     }
 
+    suspend fun loadProgramData(program: Program) = memberRepository.loadExerciseData(program)
+
     private fun todayWeekday(): String = weekdayFromToday(0)
 
     private fun weekdayFromToday(offset: Int): String {

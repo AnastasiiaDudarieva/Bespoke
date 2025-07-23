@@ -15,10 +15,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +45,8 @@ import com.bespoke.app.ui.theme.InputBackgroundColor
 import com.bespoke.app.ui.theme.Orange
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.theme.White
+import com.bespoke.app.ui.viewmodel.ProgramsViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -48,7 +56,11 @@ fun PastWorkoutRow(
     pastWorkout: PastWorkout,
     modifier: Modifier = Modifier,
     onClick:()-> Unit,
+    viewModel: ProgramsViewModel
 ) {
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -58,8 +70,13 @@ fun PastWorkoutRow(
                 color = BorderGrayColor,
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable {
-              onClick()
+            .clickable(enabled = !isLoading) {
+                coroutineScope.launch {
+                    isLoading = true
+                    viewModel.loadProgramData(program = pastWorkout.program)
+                    onClick()
+                    isLoading = false
+                }
             }
             .padding(24.dp)
     ) {
@@ -122,13 +139,14 @@ fun PastWorkoutRow(
                     color = TextDark.copy(alpha = 0.5f)
                 )
 
-//                if (isLoading) {
-//                    Spacer(modifier = Modifier.width(8.dp))
-//                    CircularProgressIndicator(
-//                        strokeWidth = 2.dp,
-//                        modifier = Modifier.size(16.dp)
-//                    )
-//                }
+                if (isLoading) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(16.dp),
+                        color = TextDark.copy(alpha = 0.5f)
+                    )
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
             }

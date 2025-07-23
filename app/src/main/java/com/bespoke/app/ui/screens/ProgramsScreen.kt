@@ -77,7 +77,8 @@ fun ProgramsScreen(
                         pastWorkout,
                         onClick = {
                             navController.navigate("${Screen.PROGRAM_OVERVIEW}?programId=${pastWorkout.program.id}")
-                        })
+                        }, viewModel = viewModel
+                    )
                     HorizontalDivider(
                         color = Color.Transparent,
                         thickness = 12.dp,
@@ -101,12 +102,15 @@ fun ProgramsScreen(
                 }
 
                 if (uiState.todayPrograms.isNotEmpty()) {
-                    itemsIndexed(uiState.todayPrograms) { index, todayPrograms ->
+                    itemsIndexed(uiState.todayPrograms) { _, todayPrograms ->
                         HorizontalDivider(
                             color = Color.Transparent,
                             thickness = 48.dp,
                         )
-                        NotStartedProgramView(todayPrograms)
+                        NotStartedProgramView(todayPrograms,
+                            onClick = {
+                                navController.navigate("${Screen.PROGRAM_OVERVIEW}?programId=${todayPrograms.id}")
+                            }, viewModel = viewModel)
                     }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
@@ -124,8 +128,14 @@ fun ProgramsScreen(
                         NoUpcomingProgramsMessage()
                     }
                 } else {
-                    itemsIndexed(uiState.upcomingPrograms) { index, upcomingPrograms ->
-                        UpcomingProgramRow(upcomingPrograms, onClick = {})
+                    itemsIndexed(uiState.upcomingPrograms) { _, upcomingPrograms ->
+                        UpcomingProgramRow(
+                            upcomingProgram = upcomingPrograms,
+                            onClick = {
+                                navController.navigate("${Screen.PROGRAM_OVERVIEW}?programId=${upcomingPrograms.program.id}")
+                            },
+                            viewModel = viewModel
+                        )
                         HorizontalDivider(
                             color = Color.Transparent,
                             thickness = 12.dp,

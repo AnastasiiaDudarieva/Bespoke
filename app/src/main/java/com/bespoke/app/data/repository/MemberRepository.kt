@@ -65,6 +65,7 @@ class MemberRepository @Inject constructor(
     private var programsListener: ListenerRegistration? = null
     private var workoutsListener: ListenerRegistration? = null
 
+    private var selectedProgram:Program? = null
 
     init {
         currentUserId()?.let { uid ->
@@ -302,6 +303,10 @@ class MemberRepository @Inject constructor(
     }
 
     suspend fun loadExerciseData(program: Program): Program {
+        selectedProgram?.let {
+            if (it.id == program.id)
+                return it
+        }
         val exerciseIds = program.sections.flatMap { section ->
             section.entries.orEmpty().mapNotNull { it.exerciseId }
         }.toSet()
@@ -350,7 +355,9 @@ class MemberRepository @Inject constructor(
             section.copy(entries = updatedEntries)
         }
 
-        return program.copy(sections = updatedSections)
+        val updatedProgram = program.copy(sections = updatedSections)
+        selectedProgram = updatedProgram
+        return updatedProgram
     }
 
 }

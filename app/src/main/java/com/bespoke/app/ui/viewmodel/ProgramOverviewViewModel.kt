@@ -1,6 +1,5 @@
 package com.bespoke.app.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.Equipment

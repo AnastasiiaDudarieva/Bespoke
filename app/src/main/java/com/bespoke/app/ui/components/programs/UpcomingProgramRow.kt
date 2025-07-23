@@ -37,6 +37,7 @@ import com.bespoke.app.data.model.lengthDisplay
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BorderGrayColor
 import com.bespoke.app.ui.theme.TextDark
+import com.bespoke.app.ui.viewmodel.ProgramsViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -45,9 +46,10 @@ import java.util.Locale
 
 @Composable
 fun UpcomingProgramRow(
-    upcomingProgram: UpcomingProgram,
-    onClick: (Program) -> Unit,
     modifier: Modifier = Modifier,
+    upcomingProgram: UpcomingProgram,
+    onClick: () -> Unit,
+    viewModel: ProgramsViewModel
 ) {
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -64,7 +66,8 @@ fun UpcomingProgramRow(
             .clickable(enabled = !isLoading) {
                 coroutineScope.launch {
                     isLoading = true
-                    onClick(upcomingProgram.program)
+                    viewModel.loadProgramData(program = upcomingProgram.program)
+                    onClick()
                     isLoading = false
                 }
             }
@@ -110,7 +113,8 @@ fun UpcomingProgramRow(
                     Spacer(modifier = Modifier.width(12.dp))
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
+                        color = TextDark.copy(alpha = 0.5f)
                     )
                 }
 
