@@ -53,9 +53,11 @@ import androidx.navigation.NavHostController
 import com.bespoke.app.R
 import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.lengthDisplay
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.components.base.FirebaseStorageImageView
 import com.bespoke.app.ui.components.programs.details.EquipmentNeeded
+import com.bespoke.app.ui.components.programs.details.MemberWorkoutGuidanceScreen
 import com.bespoke.app.ui.components.programs.details.ProgramSectionBlock
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
@@ -68,7 +70,6 @@ fun ProgramOverviewScreen(
     navController: NavHostController,
     viewModel: ProgramOverviewViewModel = hiltViewModel(),
 ) {
-    SetStatusBarIconsDark(darkIcons = false)
 
     val programs by viewModel.programs.collectAsState()
     val loadedProgram = programs.find { it.id == programId }
@@ -89,6 +90,7 @@ fun ProgramOverviewScreen(
             scrollState.firstVisibleItemIndex > 0 || scrollState.firstVisibleItemScrollOffset > 150
         }
     }
+    SetStatusBarIconsDark(darkIcons = showCollapsedHeader)
 
     val toolbarColor by animateColorAsState(
         targetValue = if (showCollapsedHeader) Color.White else Color.Transparent,
@@ -196,7 +198,10 @@ fun ProgramOverviewScreen(
                 ProgramSectionBlock(
                     section = section,
                     index = index + 1,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    onExerciseClick = {exercise->
+                        navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
+                    }
                 )
                 if (index < program.sections.lastIndex) {
                     HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)

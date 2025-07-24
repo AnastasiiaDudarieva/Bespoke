@@ -20,18 +20,6 @@ enum class MediaKind {
 
 }
 
-data class SelectedMedia(
-    val id: String = UUID.randomUUID().toString(),
-    val kind: MediaKind,
-    val url: String, // Use String instead of java.net.URL for Firebase compatibility
-)
-
-data class DisplayMedia(
-    val id: String = UUID.randomUUID().toString(),
-    val kind: MediaKind,
-    val url: String,
-    val thumbnailUrl: String? = null,
-)
 
 data class Media(
     val id: String? = null,

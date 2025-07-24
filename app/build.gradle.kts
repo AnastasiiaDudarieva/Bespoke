@@ -124,14 +124,14 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.navigation.compose)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    implementation("com.google.dagger:hilt-android:2.56.2")
+    implementation(libs.hilt.android)
     implementation(libs.firebase.crashlytics.buildtools)
-    ksp("com.google.dagger:hilt-android-compiler:2.56.2")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation("com.github.CanHub:Android-Image-Cropper:4.4.0")
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.coil.compose)
+    implementation(libs.android.image.cropper)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.libphonenumber)
 

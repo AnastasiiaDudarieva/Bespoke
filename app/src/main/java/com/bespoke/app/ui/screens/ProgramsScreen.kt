@@ -48,9 +48,13 @@ fun ProgramsScreen(
 
     val todayProgramsIndex = uiState.pastWorkouts.size
 
-    LaunchedEffect(uiState.todayPrograms) {
-        if (uiState.todayWorkouts.isNotEmpty() && uiState.todayPrograms.isNotEmpty()) {
-            scrollState.scrollToItem(todayProgramsIndex)
+    LaunchedEffect(uiState.todayPrograms, uiState.todayWorkouts, uiState.todayPrograms) {
+        if (!viewModel.hasScrolledInitially &&
+            (uiState.todayWorkouts.isNotEmpty() || uiState.todayPrograms.isNotEmpty()) &&
+            uiState.todayPrograms.isNotEmpty()
+        ) {
+            scrollState.scrollToItem(todayProgramsIndex, scrollOffset = 32)
+            viewModel.hasScrolledInitially = true
         }
     }
 

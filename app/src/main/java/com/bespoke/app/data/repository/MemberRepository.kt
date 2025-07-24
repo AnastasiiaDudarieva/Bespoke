@@ -3,6 +3,7 @@ package com.bespoke.app.data.repository
 import android.graphics.Bitmap
 import android.util.Log
 import com.bespoke.app.data.model.Equipment
+import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.Media
 import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
@@ -31,7 +32,6 @@ import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.roundToInt
 
 @Singleton
 class MemberRepository @Inject constructor(
@@ -65,7 +65,8 @@ class MemberRepository @Inject constructor(
     private var programsListener: ListenerRegistration? = null
     private var workoutsListener: ListenerRegistration? = null
 
-    private var selectedProgram:Program? = null
+    private var selectedProgram: Program? = null
+    private var selectedExercise: ExerciseEntry? = null
 
     init {
         currentUserId()?.let { uid ->
@@ -100,6 +101,7 @@ class MemberRepository @Inject constructor(
                 }
         }
     }
+
     private fun loadEquipments() {
         if (equipments.isNotEmpty())
             return
@@ -358,6 +360,13 @@ class MemberRepository @Inject constructor(
         val updatedProgram = program.copy(sections = updatedSections)
         selectedProgram = updatedProgram
         return updatedProgram
+    }
+
+    fun selectExercise(exercise: ExerciseEntry) {
+        selectedExercise = exercise
+    }
+    fun getSelectedExercise(): ExerciseEntry? {
+        return selectedExercise
     }
 
 }

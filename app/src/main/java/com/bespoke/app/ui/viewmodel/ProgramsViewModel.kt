@@ -2,6 +2,7 @@ package com.bespoke.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.PastWorkout
 import com.bespoke.app.data.model.Program
 import com.bespoke.app.data.model.UpcomingProgram
@@ -21,6 +22,8 @@ import javax.inject.Inject
 class ProgramsViewModel @Inject constructor(
     private val memberRepository: MemberRepository,
 ) : ViewModel() {
+
+    var hasScrolledInitially = false
 
     private val _uiState = MutableStateFlow(ProgramsUiState())
     val uiState: StateFlow<ProgramsUiState> = _uiState

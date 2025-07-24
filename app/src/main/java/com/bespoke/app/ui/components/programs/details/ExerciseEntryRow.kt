@@ -1,12 +1,13 @@
 package com.bespoke.app.ui.components.programs.details
 
-import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,11 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.filled.Audiotrack
-import androidx.compose.material.icons.filled.Comment
-import androidx.compose.material.icons.filled.FormatAlignLeft
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.VerticalDistribute
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,8 +34,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.data.model.ExerciseEntry
-import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.ui.components.base.FirebaseStorageImageView
+import com.bespoke.app.ui.theme.BeatriceFontFamily
+import com.bespoke.app.ui.theme.BespokeBlue
+import com.bespoke.app.ui.theme.Green
+import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
 
 @Composable
@@ -45,7 +46,8 @@ fun ExerciseEntryRow(
     entry: ExerciseEntry,
     state: ExerciseState = ExerciseState.NotStarted,
     imageUrl: String? = null,
-    viewModel: ProgramOverviewViewModel
+    viewModel: ProgramOverviewViewModel,
+    onExerciseClick: (ExerciseEntry) -> Unit
 ) {
     var url by remember { mutableStateOf(imageUrl) }
 
@@ -61,6 +63,10 @@ fun ExerciseEntryRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                viewModel.selectExercise(entry)
+                onExerciseClick(entry)
+            }
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -83,22 +89,22 @@ fun ExerciseEntryRow(
             Text(
                 text = entry.name ?: "No name",
                 fontSize = 16.sp,
-                color = Color.Black
+                lineHeight = 24.sp,
+                color = TextDark
             )
 
             Text(
                 text = viewModel.parameterListString(entry),
                 fontSize = 14.sp,
-                color = Color.Gray
+                lineHeight = 16.sp,
+                color = TextDark.copy(alpha = 0.5f)
             )
-
             when (state) {
-                ExerciseState.Complete -> StatusLabel("Completed", Color(0xFF9E9E9E))
-                ExerciseState.InProgress -> StatusLabel("In Progress", Color(0xFF6A1B9A))
+                ExerciseState.Complete -> StatusLabel("Completed", Green)
+                ExerciseState.InProgress -> StatusLabel("In Progress", BespokeBlue)
                 else -> {}
             }
 
-            Log.e("entry.mediaList", "${entry.mediaList}")
             Row(verticalAlignment = Alignment.CenterVertically) {
                 entry.mediaList?.forEach { item ->
                     val icon = when (item.kind?.lowercase()) {
@@ -142,9 +148,9 @@ fun StatusLabel(text: String, dotColor: Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .padding(top = 4.dp)
-            .background(Color(0xFFE0E0E0), RoundedCornerShape(4.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .background(Color.Gray.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+            .padding(horizontal = 8.dp)
+            .height(24.dp)
     ) {
         Box(
             modifier = Modifier
@@ -152,7 +158,13 @@ fun StatusLabel(text: String, dotColor: Color) {
                 .background(dotColor, shape = CircleShape)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = text, fontSize = 12.sp)
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = TextDark,
+            fontFamily = BeatriceFontFamily
+        )
+
     }
 }
 

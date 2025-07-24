@@ -9,6 +9,7 @@ object Screen {
     const val WEB_VIEW = "webView"
     const val PROGRAMS = "programs"
     const val PROGRAM_OVERVIEW = "program_overview"
+    const val EXERCISE = "exercise"
 
 
     fun webViewWithUrl(url: String): String {

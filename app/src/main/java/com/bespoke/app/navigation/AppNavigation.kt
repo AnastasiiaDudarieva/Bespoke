@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bespoke.app.ui.viewmodel.AuthViewModel
 import com.bespoke.app.ui.components.base.WebViewScreen
+import com.bespoke.app.ui.components.programs.details.MemberWorkoutGuidanceScreen
 import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.screens.AccountScreen
 import com.bespoke.app.ui.screens.EditMemberProfileScreen
@@ -64,6 +65,13 @@ fun AppNavigation() {
                 ) { backStackEntry ->
                     val programId = backStackEntry.arguments?.getString("programId") ?: ""
                     ProgramOverviewScreen(programId = programId, navController = navController)
+                }
+                composable(
+                    route = "${Screen.EXERCISE}?exerciseId={exerciseId}",
+                    arguments = listOf(navArgument("exerciseId") { defaultValue = ""; nullable = false })
+                ) { backStackEntry ->
+                    val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
+                    MemberWorkoutGuidanceScreen(currentExerciseEntryId = exerciseId, navController = navController)
                 }
             }
         }

@@ -30,27 +30,6 @@ open class BaseRepository {
             }
         }
 
-    suspend fun <V, T> makeVoidRequest(request: suspend () -> Response<Void>): BaseResponse<V, T> =
-        withContext(Dispatchers.IO) {
-            val response = request.invoke()
-            try {
-                if (response.isSuccessful)
-                    return@withContext BaseResponse(status = true)
-                else {
-                    return@withContext processError(response)
-                }
-            } catch (e: HttpException) {
-                e.printStackTrace()
-                return@withContext BaseResponse(
-                    status = false,
-                    errorMessage = e.message()
-                )
-            } catch (e: Throwable) {
-                e.printStackTrace()
-                return@withContext BaseResponse(status = false)
-            }
-        }
-
     private fun <T, V, W> processError(response: Response<W>): BaseResponse<T, V> {
         if (response.isSuccessful)
             return BaseResponse(

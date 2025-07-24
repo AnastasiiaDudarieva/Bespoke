@@ -12,15 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.ProgramSection
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
+import java.util.Locale
 
 @Composable
 fun ProgramSectionBlock(
     section: ProgramSection,
     index: Int,
     viewModel: ProgramOverviewViewModel,
+    onExerciseClick: (ExerciseEntry) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -39,7 +42,7 @@ fun ProgramSectionBlock(
                 fontWeight = FontWeight.W600
             )
             Text(
-                String.format("%02d", index),
+                String.format(Locale.ENGLISH,"%02d", index),
                 fontSize = 14.sp,
                 fontFamily = BeatriceFontFamily,
                 fontWeight = FontWeight.W600
@@ -47,7 +50,8 @@ fun ProgramSectionBlock(
         }
 
         section.entries?.forEach { entry ->
-            ExerciseEntryRow(entry = entry, viewModel = viewModel)
+            ExerciseEntryRow(entry = entry, viewModel = viewModel,
+                onExerciseClick = onExerciseClick)
         }
         Spacer(Modifier.height(48.dp))
 

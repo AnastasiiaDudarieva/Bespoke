@@ -53,6 +53,6 @@ class ProgramOverviewViewModel @Inject constructor(
 
     suspend fun resolveFirebaseUrl(path: String): String {
         return Firebase.storage.getReference(path).downloadUrl.await().toString()
-
     }
+    fun selectExercise(exercise: ExerciseEntry) = memberRepository.selectExercise(exercise)
 }
