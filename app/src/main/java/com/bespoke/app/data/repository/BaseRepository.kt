@@ -44,7 +44,6 @@ open class BaseRepository {
             false,
             null,
             null,
-            error,
             error?.error
         )
     }

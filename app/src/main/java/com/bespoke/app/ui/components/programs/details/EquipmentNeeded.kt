@@ -26,12 +26,11 @@ import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
 fun EquipmentNeeded(program: Program, viewModel: ProgramOverviewViewModel) {
 
     val equipmentLabels = remember(program) {
-        Log.e("program", "${program}")
-        program.sections?.flatMap { it.entries ?: emptyList() }
-            ?.flatMap { it.equipmentIds.orEmpty() }
-            ?.mapNotNull { id -> viewModel.getEquipmentLabelById(id) }
-            ?.toSet()
-            ?.sorted() ?: emptyList()
+        program.sections.flatMap { it.entries ?: emptyList() }
+            .flatMap { it.equipmentIds.orEmpty() }
+            .mapNotNull { id -> viewModel.getEquipmentLabelById(id) }
+            .toSet()
+            .sorted()
     }
 
     Column(

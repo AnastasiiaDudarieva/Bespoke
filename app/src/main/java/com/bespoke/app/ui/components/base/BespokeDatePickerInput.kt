@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.ui.theme.BeatriceFontFamily
-import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.InputBackgroundColor
 import com.bespoke.app.ui.theme.TextDark
 

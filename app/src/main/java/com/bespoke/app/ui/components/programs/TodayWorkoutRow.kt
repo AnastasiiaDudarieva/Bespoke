@@ -58,15 +58,7 @@ fun TodayWorkoutRow(
         // Background image
         if (program?.thumbnail?.isNotBlank() == true) {
             FirebaseStorageImageView(gsPath = program.thumbnail)
-        } else {
-//            Image(
-//                painter = painterResource(id = R.drawable.background_primary),
-//                contentDescription = null,
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier.matchParentSize()
-//            )
         }
-
         // Content
         Column(
             modifier = Modifier

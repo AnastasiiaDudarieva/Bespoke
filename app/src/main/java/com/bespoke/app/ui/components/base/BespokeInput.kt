@@ -1,7 +1,6 @@
 package com.bespoke.app.ui.components.base
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,6 @@ import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.InputBackgroundColor
 import com.bespoke.app.ui.theme.TextDark
-import com.bespoke.app.ui.theme.White
 
 @Composable
 fun BespokeInput(

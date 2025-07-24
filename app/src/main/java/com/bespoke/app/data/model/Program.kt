@@ -80,7 +80,7 @@ fun Program.requiredWorkoutDays(): List<Date> {
 }
 
 fun Program.lengthDisplay(): String {
-    val exerciseEntries = sections.flatMap { it.entries!! } ?: emptyList()
+    val exerciseEntries = sections.flatMap { it.entries!! }
     var exerciseTime = 0f
     for (entry in exerciseEntries) {
         exerciseTime += (entry.sets * entry.timeForUse()).toFloat()

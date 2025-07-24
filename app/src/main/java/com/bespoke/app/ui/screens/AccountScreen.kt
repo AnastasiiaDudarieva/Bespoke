@@ -28,11 +28,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bespoke.app.R
 import com.bespoke.app.data.model.dobFormatted
-import com.bespoke.app.ui.viewmodel.AccountViewModel
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
-import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.TextDark
+import com.bespoke.app.ui.viewmodel.AccountViewModel
 
 @Composable
 fun AccountScreen(

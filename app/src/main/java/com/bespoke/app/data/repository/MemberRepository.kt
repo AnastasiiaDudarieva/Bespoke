@@ -47,9 +47,6 @@ class MemberRepository @Inject constructor(
     private val _workouts = MutableStateFlow<List<Workout>>(emptyList())
     val workouts: StateFlow<List<Workout>> = _workouts
 
-    private val _streakStats = MutableStateFlow<StreakDataStats?>(null)
-    val streakStats: StateFlow<StreakDataStats?> = _streakStats
-
     private val _pastWorkouts = MutableStateFlow<List<PastWorkout>>(emptyList())
     val pastWorkouts: StateFlow<List<PastWorkout>> = _pastWorkouts
 

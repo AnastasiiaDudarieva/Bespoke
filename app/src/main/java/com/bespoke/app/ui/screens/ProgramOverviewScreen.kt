@@ -37,9 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -51,13 +49,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bespoke.app.R
-import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.lengthDisplay
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.components.base.BespokeTopBar
 import com.bespoke.app.ui.components.base.FirebaseStorageImageView
 import com.bespoke.app.ui.components.programs.details.EquipmentNeeded
-import com.bespoke.app.ui.components.programs.details.MemberWorkoutGuidanceScreen
 import com.bespoke.app.ui.components.programs.details.ProgramSectionBlock
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
