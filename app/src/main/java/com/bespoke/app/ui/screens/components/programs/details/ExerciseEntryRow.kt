@@ -34,7 +34,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.data.model.ExerciseEntry
-import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.ui.screens.components.base.FirebaseStorageImageView
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.TextDark
@@ -43,7 +42,6 @@ import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
 @Composable
 fun ExerciseEntryRow(
     entry: ExerciseEntry,
-    state: ExerciseState = ExerciseState.setsStart,
     imageUrl: String? = null,
     viewModel: ProgramOverviewViewModel,
     onExerciseClick: (ExerciseEntry) -> Unit
@@ -98,11 +96,6 @@ fun ExerciseEntryRow(
                 lineHeight = 16.sp,
                 color = TextDark.copy(alpha = 0.5f)
             )
-//            when (state) {
-//                ExerciseState.SetsFinished -> StatusLabel("Completed", Green)
-//                ExerciseState.InProgress -> StatusLabel("In Progress", BespokeBlue)
-//                else -> {}
-//            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 entry.mediaList?.forEach { item ->

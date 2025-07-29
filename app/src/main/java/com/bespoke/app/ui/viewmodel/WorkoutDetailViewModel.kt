@@ -414,4 +414,7 @@ class WorkoutDetailViewModel @Inject constructor(
         timerJob?.cancel()
         countdownJob?.cancel()
     }
+
+    fun selectExercise(currentExercise: ExerciseEntry) = memberRepository.selectExercise(currentExercise)
+
 }

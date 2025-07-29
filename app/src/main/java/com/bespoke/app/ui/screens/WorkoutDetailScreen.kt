@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bespoke.app.data.model.ExerciseState
+import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.screens.components.base.ExoVideoPlayer
 import com.bespoke.app.ui.screens.components.base.KeepScreenOn
 import com.bespoke.app.ui.theme.BeatriceFontFamily
@@ -424,7 +425,12 @@ fun WorkoutDetailScreen(
                 ) {
 
                     IconButton(
-                        onClick = {/*TODO open exercise*/ },
+                        onClick = {
+                            currentExercise?.let {
+                                viewModel.selectExercise(it)
+                                navController.navigate("${Screen.EXERCISE}?exerciseId=${it.id}")
+                            }
+                        },
                         modifier = Modifier
                             .align(Alignment.Center)
                             .size(56.dp)
@@ -606,7 +612,8 @@ fun PulsingLines(
                 wasPausedMidway &&
                 lastProgress.floatValue in 0f..1f
             ) {
-                val remaining = ((if (direction == 1) 1f - lastProgress.floatValue else lastProgress.floatValue) * half).toInt()
+                val remaining =
+                    ((if (direction == 1) 1f - lastProgress.floatValue else lastProgress.floatValue) * half).toInt()
 
                 progress.snapTo(lastProgress.floatValue)
 

@@ -87,7 +87,6 @@ class MemberRepository @Inject constructor(
         try {
             val document = firestore.collection("members").document(userId).get().await()
             val loadedMember = document.toObject(Member::class.java)
-            Log.d("MemberRepository", "Loaded member: $loadedMember")
             _member.value = loadedMember
         } catch (e: Exception) {
             e.printStackTrace()
@@ -378,7 +377,6 @@ class MemberRepository @Inject constructor(
         selectedWorkout?._program?.sections?.flatMap { section -> section.entries.orEmpty() }
             ?.map { entry ->
                 val media = entry.exerciseMedia?.firstOrNull { it.kind == "video" }
-                Log.e("media", "${media}")
                 media?.path?.let { path ->
                     FirebaseStorageUrlCache.get(path) ?: getFirebaseDownloadUrl(path)?.also {
                         FirebaseStorageUrlCache.set(path, it)
@@ -415,8 +413,6 @@ class MemberRepository @Inject constructor(
             _program = program
         )
 
-        Log.e("workout", "${workout}")
-
         val memberId = currentUserId()
             ?: throw IllegalStateException("Member not loaded")
 
@@ -427,7 +423,6 @@ class MemberRepository @Inject constructor(
 
         val documentRef = workoutsRef.add(workout).await()
         val result = workout.copy(id = documentRef.id)
-        Log.e("result", "${result}")
 
         loadWorkoutData(result)
         return result
