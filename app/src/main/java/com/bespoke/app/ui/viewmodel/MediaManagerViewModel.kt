@@ -103,16 +103,15 @@ class MediaManagerViewModel @Inject constructor(
                 "Time" -> label = "$time Sec"
                 "Time & Reps" -> label = "$time Sec  •  $sets Sets  •  $reps Reps"
             }
-
-            val hasWeights =
-                equipmentIds?.any { it in com.bespoke.app.data.model.Equipment.weightEquipmentIds }
-            if (hasWeights == true) {
+            if (hasWeights) {
                 label += "  •  $weight lbs"
             }
 
             return label
         }
     }
+
+
 
     override fun onCleared() {
         stopPlayback()

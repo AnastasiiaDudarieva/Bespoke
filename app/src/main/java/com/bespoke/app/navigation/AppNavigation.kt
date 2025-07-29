@@ -7,9 +7,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.bespoke.app.ui.viewmodel.AuthViewModel
-import com.bespoke.app.ui.components.base.WebViewScreen
-import com.bespoke.app.ui.components.programs.details.MemberWorkoutGuidanceScreen
 import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.screens.AccountScreen
 import com.bespoke.app.ui.screens.EditMemberProfileScreen
@@ -19,6 +16,10 @@ import com.bespoke.app.ui.screens.ProgramOverviewScreen
 import com.bespoke.app.ui.screens.ProgramsScreen
 import com.bespoke.app.ui.screens.SettingsScreen
 import com.bespoke.app.ui.screens.WelcomeScreen
+import com.bespoke.app.ui.screens.WorkoutDetailScreen
+import com.bespoke.app.ui.screens.components.base.WebViewScreen
+import com.bespoke.app.ui.screens.components.programs.details.MemberWorkoutGuidanceScreen
+import com.bespoke.app.ui.viewmodel.AuthViewModel
 
 
 @Composable
@@ -72,6 +73,14 @@ fun AppNavigation() {
                 ) { backStackEntry ->
                     val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
                     MemberWorkoutGuidanceScreen(currentExerciseEntryId = exerciseId, navController = navController)
+                }
+
+                composable(
+                    route = "${Screen.WORKOUT}?workoutId={workoutId}",
+                    arguments = listOf(navArgument("workoutId") { defaultValue = ""; nullable = false })
+                ) { backStackEntry ->
+                    val workoutId = backStackEntry.arguments?.getString("workoutId") ?: ""
+                    WorkoutDetailScreen(workoutId = workoutId, navController = navController)
                 }
             }
         }

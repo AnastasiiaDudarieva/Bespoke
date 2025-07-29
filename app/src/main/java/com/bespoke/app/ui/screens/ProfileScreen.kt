@@ -42,11 +42,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
 import com.bespoke.app.navigation.Screen
-import com.bespoke.app.ui.components.base.BespokeTopBar
-import com.bespoke.app.ui.components.base.ClickableUnderlinedText
-import com.bespoke.app.ui.components.base.CustomAvatar
-import com.bespoke.app.ui.components.profile.StatsCard
 import com.bespoke.app.ui.models.profile.ProfileStatsType
+import com.bespoke.app.ui.screens.components.base.BespokeTopBar
+import com.bespoke.app.ui.screens.components.base.ClickableUnderlinedText
+import com.bespoke.app.ui.screens.components.base.CustomAvatar
+import com.bespoke.app.ui.screens.components.profile.StatsCard
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.TextDark

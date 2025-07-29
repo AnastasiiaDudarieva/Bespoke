@@ -9,6 +9,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("com.google.firebase.crashlytics")
 }
 
 val versionMajor = (project.findProperty("versionMajor") as String).toInt()
@@ -120,6 +121,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.crashlytics.ndk)
+    implementation(libs.firebase.analytics)
 
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.navigation.compose)
@@ -135,7 +138,11 @@ dependencies {
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.libphonenumber)
 
-
+    implementation (libs.androidx.media3.exoplayer)
+    implementation (libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.datasource)
+    implementation(libs.androidx.media3.datasource.okhttp)
+//    implementation(libs.androidx.media3.datasource.cache)
 
 
 

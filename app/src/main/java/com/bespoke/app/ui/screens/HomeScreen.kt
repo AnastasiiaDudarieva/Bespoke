@@ -31,7 +31,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
 import com.bespoke.app.navigation.Screen
-import com.bespoke.app.ui.components.base.CustomAvatar
+import com.bespoke.app.ui.screens.components.base.CustomAvatar
 import com.bespoke.app.ui.theme.AfternoonGradient
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.EveningGradient

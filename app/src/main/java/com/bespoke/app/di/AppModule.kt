@@ -1,5 +1,11 @@
 package com.bespoke.app.di
 
+import android.content.Context
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import com.bespoke.app.BuildConfig
 import com.bespoke.app.data.LoggingInterceptor
 import com.bespoke.app.data.repository.MemberRepository
@@ -13,10 +19,12 @@ import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterF
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import javax.inject.Singleton
 
 /**
@@ -71,5 +79,16 @@ object AppModule {
         firebaseFirestore,
         AuthService(firebaseAuth)
     )
+
+    @OptIn(UnstableApi::class)
+    @Provides
+    @Singleton
+    fun provideSimpleCash(@ApplicationContext context: Context): SimpleCache {
+        val cacheDir = File(context.cacheDir, "exoCache")
+        val evictor = LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024) // 100MB
+        val databaseProvider = StandaloneDatabaseProvider(context)
+
+        return SimpleCache(cacheDir, evictor, databaseProvider)
+    }
 
 }

@@ -52,10 +52,9 @@ data class ExerciseEntryInProgress(
 
 enum class ExerciseState {
     setsStart,
-    restBtwnSets,
-    repsStart,
-    restBtwnReps,
-    paused,
-    finished,
-    setsFinished
+    preActive,
+    active,
+    preRest,
+    rest,
+    setsFinished,
 }

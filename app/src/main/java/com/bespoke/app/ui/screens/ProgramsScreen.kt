@@ -27,12 +27,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
 import com.bespoke.app.navigation.Screen
-import com.bespoke.app.ui.components.base.BespokeTopBar
-import com.bespoke.app.ui.components.programs.NoUpcomingProgramsMessage
-import com.bespoke.app.ui.components.programs.NotStartedProgramView
-import com.bespoke.app.ui.components.programs.PastWorkoutRow
-import com.bespoke.app.ui.components.programs.TodayWorkoutRow
-import com.bespoke.app.ui.components.programs.UpcomingProgramRow
+import com.bespoke.app.ui.screens.components.base.BespokeTopBar
+import com.bespoke.app.ui.screens.components.programs.NoUpcomingProgramsMessage
+import com.bespoke.app.ui.screens.components.programs.NotStartedProgramView
+import com.bespoke.app.ui.screens.components.programs.PastWorkoutRow
+import com.bespoke.app.ui.screens.components.programs.TodayWorkoutRow
+import com.bespoke.app.ui.screens.components.programs.UpcomingProgramRow
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.ProgramsViewModel
 
@@ -50,8 +50,7 @@ fun ProgramsScreen(
 
     LaunchedEffect(uiState.todayPrograms, uiState.todayWorkouts, uiState.todayPrograms) {
         if (!viewModel.hasScrolledInitially &&
-            (uiState.todayWorkouts.isNotEmpty() || uiState.todayPrograms.isNotEmpty()) &&
-            uiState.todayPrograms.isNotEmpty()
+            (uiState.todayWorkouts.isNotEmpty() || uiState.todayPrograms.isNotEmpty())
         ) {
             scrollState.scrollToItem(todayProgramsIndex, scrollOffset = 32)
             viewModel.hasScrolledInitially = true
@@ -93,8 +92,11 @@ fun ProgramsScreen(
                     itemsIndexed(uiState.todayWorkouts) { index, todayWorkouts ->
                         TodayWorkoutRow(
                             workout = todayWorkouts,
-                            onResumeClick = { workout ->
-                            }
+                            onResumeClick = {
+                                navController.navigate("${Screen.WORKOUT}?workoutId=${todayWorkouts.id}")
+
+                            },
+                            viewModel= viewModel
                         )
                         if (index < uiState.todayWorkouts.lastIndex) {
                             HorizontalDivider(

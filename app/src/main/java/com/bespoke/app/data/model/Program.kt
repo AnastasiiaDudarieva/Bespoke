@@ -54,7 +54,9 @@ data class ExerciseEntry(
     val comments: String? = null,
     val exerciseMedia: List<Media>? = null,
     val mediaList: List<Media>? = null,
-)
+) {
+    val hasWeights: Boolean = equipmentIds?.any { it in Equipment.weightEquipmentIds } == true
+}
 
 data class UpcomingProgram(
     val id: String? = null,
@@ -95,4 +97,6 @@ fun ExerciseEntry.timeForUse(): Int {
         else -> 3 * reps
     }
 }
+
+
 

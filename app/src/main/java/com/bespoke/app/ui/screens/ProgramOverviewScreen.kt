@@ -51,10 +51,10 @@ import androidx.navigation.NavHostController
 import com.bespoke.app.R
 import com.bespoke.app.data.model.lengthDisplay
 import com.bespoke.app.navigation.Screen
-import com.bespoke.app.ui.components.base.BespokeTopBar
-import com.bespoke.app.ui.components.base.FirebaseStorageImageView
-import com.bespoke.app.ui.components.programs.details.EquipmentNeeded
-import com.bespoke.app.ui.components.programs.details.ProgramSectionBlock
+import com.bespoke.app.ui.screens.components.base.BespokeTopBar
+import com.bespoke.app.ui.screens.components.base.FirebaseStorageImageView
+import com.bespoke.app.ui.screens.components.programs.details.EquipmentNeeded
+import com.bespoke.app.ui.screens.components.programs.details.ProgramSectionBlock
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.TextDark

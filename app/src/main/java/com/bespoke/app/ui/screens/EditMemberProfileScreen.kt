@@ -53,9 +53,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bespoke.app.R
-import com.bespoke.app.ui.components.base.BespokeDatePickerInput
-import com.bespoke.app.ui.components.base.BespokeInput
-import com.bespoke.app.ui.components.base.BespokeTopBar
+import com.bespoke.app.ui.screens.components.base.BespokeDatePickerInput
+import com.bespoke.app.ui.screens.components.base.BespokeInput
+import com.bespoke.app.ui.screens.components.base.BespokeTopBar
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.PlaceholderColor

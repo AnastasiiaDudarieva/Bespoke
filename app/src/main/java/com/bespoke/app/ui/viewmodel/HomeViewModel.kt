@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.repository.MemberRepository
-import com.bespoke.app.ui.components.base.imageBitmapCache
+import com.bespoke.app.ui.screens.components.base.imageBitmapCache
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

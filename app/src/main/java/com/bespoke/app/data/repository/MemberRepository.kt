@@ -13,6 +13,8 @@ import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.model.requiredWorkoutDays
 import com.bespoke.app.data.services.AuthService
+import com.bespoke.app.utils.FirebaseStorageUrlCache
+import com.bespoke.app.utils.getFirebaseDownloadUrl
 import com.bespoke.app.utils.toStartOfDay
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream
 import com.google.firebase.firestore.FirebaseFirestore
@@ -64,6 +66,7 @@ class MemberRepository @Inject constructor(
 
     private var selectedProgram: Program? = null
     private var selectedExercise: ExerciseEntry? = null
+    private var selectedWorkout: Workout? = null
 
     init {
         currentUserId()?.let { uid ->
@@ -195,6 +198,7 @@ class MemberRepository @Inject constructor(
                 snapshot?.let {
                     val result =
                         it.documents.mapNotNull { doc ->
+                            Log.e("doc", "${doc}")
                             doc.toObject(Workout::class.java)
                         }
                     _workouts.value = result.sortedBy { workout -> workout.completedAt ?: 0 }
@@ -362,8 +366,34 @@ class MemberRepository @Inject constructor(
     fun selectExercise(exercise: ExerciseEntry) {
         selectedExercise = exercise
     }
+
     fun getSelectedExercise(): ExerciseEntry? {
         return selectedExercise
     }
 
+    suspend fun loadWorkoutData(workout: Workout) {
+        val storedWorkout = workouts.value.firstOrNull { it.id == workout.id }
+        selectedWorkout = storedWorkout ?: workout
+        selectedWorkout?._program?.sections?.flatMap { section -> section.entries.orEmpty() }
+            ?.map { entry ->
+                val media = entry.exerciseMedia?.firstOrNull { it.kind == "video" }
+                media?.path?.let { path ->
+                    FirebaseStorageUrlCache.get(path) ?: getFirebaseDownloadUrl(path)?.also {
+                        FirebaseStorageUrlCache.set(path, it)
+                    }
+                }
+                media?.thumbnailPath?.let { path ->
+                    FirebaseStorageUrlCache.get(path) ?: getFirebaseDownloadUrl(path)?.also {
+                        FirebaseStorageUrlCache.set(path, it)
+                    }
+                }
+            }
+        selectedProgram = null
+    }
+
+    fun getSelectedWorkout(workoutId: String): Workout? {
+        if (selectedWorkout != null && selectedWorkout?.id == workoutId)
+            return selectedWorkout
+        return workouts.value.firstOrNull { it.id == workoutId }
+    }
 }

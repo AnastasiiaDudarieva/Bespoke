@@ -28,7 +28,7 @@ import androidx.navigation.NavHostController
 import com.bespoke.app.BuildConfig
 import com.bespoke.app.R
 import com.bespoke.app.navigation.Screen
-import com.bespoke.app.ui.components.base.BespokeTopBar
+import com.bespoke.app.ui.screens.components.base.BespokeTopBar
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.utils.privacyPolicy
 import com.bespoke.app.utils.termsOfService
