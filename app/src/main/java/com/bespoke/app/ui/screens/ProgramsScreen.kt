@@ -94,7 +94,6 @@ fun ProgramsScreen(
                             workout = todayWorkouts,
                             onResumeClick = {
                                 navController.navigate("${Screen.WORKOUT}?workoutId=${todayWorkouts.id}")
-
                             },
                             viewModel= viewModel
                         )

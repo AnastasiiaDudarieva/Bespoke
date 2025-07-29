@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import com.bespoke.app.data.model.Equipment
 import com.bespoke.app.data.model.ExerciseEntry
+import com.bespoke.app.data.model.ExerciseEntryInProgress
 import com.bespoke.app.data.model.Media
 import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
@@ -377,6 +378,7 @@ class MemberRepository @Inject constructor(
         selectedWorkout?._program?.sections?.flatMap { section -> section.entries.orEmpty() }
             ?.map { entry ->
                 val media = entry.exerciseMedia?.firstOrNull { it.kind == "video" }
+                Log.e("media", "${media}")
                 media?.path?.let { path ->
                     FirebaseStorageUrlCache.get(path) ?: getFirebaseDownloadUrl(path)?.also {
                         FirebaseStorageUrlCache.set(path, it)
@@ -396,4 +398,40 @@ class MemberRepository @Inject constructor(
             return selectedWorkout
         return workouts.value.firstOrNull { it.id == workoutId }
     }
+
+    suspend fun startWorkout(program: Program): Workout {
+        val firstEntry = program.sections.firstOrNull()?.entries?.firstOrNull()
+            ?: throw IllegalStateException("Program has no entries")
+
+        val exerciseEntryInProgress = ExerciseEntryInProgress(
+            currentEntry = firstEntry
+        )
+
+        val workout = Workout(
+            startedAt = (System.currentTimeMillis() / 1000).toInt(),
+            completedExerciseEntries = emptyMap(),
+            exerciseEntryInProgress = exerciseEntryInProgress,
+            programId = program.id ?: "",
+            _program = program
+        )
+
+        Log.e("workout", "${workout}")
+
+        val memberId = currentUserId()
+            ?: throw IllegalStateException("Member not loaded")
+
+        val workoutsRef = firestore
+            .collection("members")
+            .document(memberId)
+            .collection("workouts")
+
+        val documentRef = workoutsRef.add(workout).await()
+        val result = workout.copy(id = documentRef.id)
+        Log.e("result", "${result}")
+
+        loadWorkoutData(result)
+        return result
+    }
+
+
 }

@@ -37,7 +37,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -59,6 +62,7 @@ import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.ProgramOverviewViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProgramOverviewScreen(
@@ -71,6 +75,8 @@ fun ProgramOverviewScreen(
     val loadedProgram = programs.find { it.id == programId }
 
     val programState by viewModel.program.collectAsState()
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(loadedProgram) {
         if (loadedProgram != null) {
@@ -162,7 +168,16 @@ fun ProgramOverviewScreen(
                         .padding(start = 24.dp)
                 ) {
                     IconButton(
-                        onClick = { },
+                        onClick = {
+
+                            coroutineScope.launch {
+                                isLoading = true
+                                val workout = viewModel.startWorkout()
+                                isLoading = false
+                                navController.navigate("${Screen.WORKOUT}?workoutId=${workout?.id}")
+                            }
+
+                        },
                         modifier = Modifier
                             .size(96.dp)
                             .background(BespokeBlue, CircleShape)
@@ -260,6 +275,3 @@ fun ProgramOverviewScreen(
         }
     }
 }
-
-
-

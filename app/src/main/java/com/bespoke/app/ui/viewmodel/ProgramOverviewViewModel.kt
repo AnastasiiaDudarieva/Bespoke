@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.Equipment
 import com.bespoke.app.data.model.ExerciseEntry
+import com.bespoke.app.data.model.ExerciseEntryInProgress
 import com.bespoke.app.data.model.Program
+import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.repository.MemberRepository
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -48,8 +50,10 @@ class ProgramOverviewViewModel @Inject constructor(
 
             return label
         }
-
     }
+
+    suspend fun startWorkout() = _program.value?.let { memberRepository.startWorkout(it) }
+
 
     suspend fun resolveFirebaseUrl(path: String): String {
         return Firebase.storage.getReference(path).downloadUrl.await().toString()
