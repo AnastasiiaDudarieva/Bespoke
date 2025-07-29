@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -169,25 +170,35 @@ fun ProgramOverviewScreen(
                 ) {
                     IconButton(
                         onClick = {
-
-                            coroutineScope.launch {
-                                isLoading = true
-                                val workout = viewModel.startWorkout()
-                                isLoading = false
-                                navController.navigate("${Screen.WORKOUT}?workoutId=${workout?.id}")
-                            }
+                            if (!isLoading)
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    val workout = viewModel.startWorkout()
+                                    isLoading = false
+                                    navController.popBackStack()
+                                    navController.navigate("${Screen.WORKOUT}?workoutId=${workout?.id}")
+                                }
 
                         },
                         modifier = Modifier
                             .size(96.dp)
                             .background(BespokeBlue, CircleShape)
                     ) {
-                        Icon(
-                            Icons.Default.PlayArrow,
-                            contentDescription = "Play",
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
+                        if(isLoading){
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        }else {
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                contentDescription = "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -210,7 +221,7 @@ fun ProgramOverviewScreen(
                     section = section,
                     index = index + 1,
                     viewModel = viewModel,
-                    onExerciseClick = {exercise->
+                    onExerciseClick = { exercise ->
                         navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
                     }
                 )
