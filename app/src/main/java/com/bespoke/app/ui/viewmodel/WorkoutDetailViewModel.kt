@@ -132,7 +132,6 @@ class WorkoutDetailViewModel @Inject constructor(
         if (currentIndex + 1 < allExercises.size) {
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
-            loadVideoUrlIfNeeded()
             exerciseDuration = 0
             startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
@@ -160,7 +159,6 @@ class WorkoutDetailViewModel @Inject constructor(
         } else if (currentIndex + 1 < allExercises.size) {
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
-            loadVideoUrlIfNeeded()
             exerciseDuration = 0
             startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
@@ -266,8 +264,6 @@ class WorkoutDetailViewModel @Inject constructor(
         _exerciseState.value = inProgress?.exerciseState ?: ExerciseState.setsStart
         exerciseDuration = inProgress?.counter ?: 0
 
-        loadVideoUrlIfNeeded()
-
         if (inProgress?.exerciseState != null && inProgress.isPaused == false) {
             startState(inProgress.exerciseState)
             if (inProgress.exerciseState == ExerciseState.active) {
@@ -329,11 +325,10 @@ class WorkoutDetailViewModel @Inject constructor(
                     _currentSet.value = 1
                     exerciseDuration = 0
                     startExerciseDurationTimer()
-                    loadVideoUrlIfNeeded()
                 } else {
+                    startState(ExerciseState.setsFinished)
                     saveFinishedSet()
                     updateWorkout()
-                    startState(ExerciseState.setsFinished)
                     return
                 }
 
@@ -531,7 +526,7 @@ class WorkoutDetailViewModel @Inject constructor(
     ) {
         val workout = _currentWorkout.value ?: return
         val updatedEntries = workout.completedExerciseEntries.toMutableMap()
-        updatedEntries[exerciseId] = updatedFeedback.copy(status = ExerciseState.setsFinished.name)
+        updatedEntries[exerciseId] = updatedFeedback.copy(status = _exerciseState.value.name)
 
         _currentWorkout.value = workout.copy(completedExerciseEntries = updatedEntries)
     }

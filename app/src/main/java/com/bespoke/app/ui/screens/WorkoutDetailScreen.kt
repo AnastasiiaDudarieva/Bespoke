@@ -1,10 +1,7 @@
 package com.bespoke.app.ui.screens
 
 import SetStatusBarIconsDark
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -37,26 +36,19 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,16 +59,16 @@ import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.screens.components.base.ExoVideoPlayer
 import com.bespoke.app.ui.screens.components.base.KeepScreenOn
+import com.bespoke.app.ui.screens.components.programs.workout.SetsCounter
+import com.bespoke.app.ui.screens.components.programs.workout.TimerProgress
+import com.bespoke.app.ui.screens.components.programs.workout.VideoProgress
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
-import com.bespoke.app.ui.theme.BorderGrayColor
-import com.bespoke.app.ui.theme.Green
 import com.bespoke.app.ui.theme.InputBackgroundColor
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.WorkoutDetailViewModel
 import com.bespoke.app.utils.AudioPlayer
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 fun WorkoutDetailScreen(
@@ -89,7 +81,6 @@ fun WorkoutDetailScreen(
     val context = LocalContext.current
     val audioPlayer = remember { AudioPlayer(context) }
 
-
     val exerciseState by viewModel.exerciseState.collectAsState()
     val currentExercise by viewModel.currentExerciseEntry.collectAsState()
     val currentSet by viewModel.currentSet.collectAsState()
@@ -100,21 +91,27 @@ fun WorkoutDetailScreen(
 
     val repCount = viewModel.repCount.collectAsState().value
     val elapsed = viewModel.elapsedSeconds.collectAsState().value
-    val timeCurrentRep = viewModel.timeInCurrentRep.collectAsState().value
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(stateText) {
-        if(isPaused)
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { 2 }
+    )
+
+    LaunchedEffect(stateText, repCount) {
+        if (isPaused)
             return@LaunchedEffect
         when (stateText) {
-            "Get Ready!" ->  audioPlayer.play(R.raw.get_ready)
+            "Get Ready!" -> audioPlayer.play(R.raw.get_ready)
             "Go" -> audioPlayer.play(R.raw.start)
             "Complete!" -> audioPlayer.play(R.raw.end)
             else -> {}
         }
+        if (repCount > 0)
+            audioPlayer.play(R.raw.bip)
     }
     LaunchedEffect(exerciseState) {
-        if(isPaused)
+        if (isPaused)
             return@LaunchedEffect
         when (exerciseState) {
             ExerciseState.rest -> audioPlayer.play(R.raw.recover)
@@ -138,36 +135,80 @@ fun WorkoutDetailScreen(
             .background(Color.Black)
     ) {
         Box(modifier = Modifier.weight(0.8f)) {
-            videoUrl?.let { url ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                HorizontalPager(
+                    state = pagerState,
+                    beyondViewportPageCount = 2,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    when (page) {
+                        0 -> {
+                            videoUrl?.let { url ->
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    ExoVideoPlayer(
-                        videoUrl = url,
-                        thumbnailUrl = thumbnailUrl,
-                    )
-                    if ((isPaused && exerciseState != ExerciseState.setsStart && viewModel.exerciseDuration==0 ) || exerciseState == ExerciseState.rest) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    ExoVideoPlayer(
+                                        videoUrl = url,
+                                        thumbnailUrl = thumbnailUrl,
+                                    )
+                                    if ((isPaused && exerciseState != ExerciseState.setsStart
+                                                && viewModel.exerciseDuration == 0) || exerciseState == ExerciseState.rest
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(Color.Black.copy(alpha = 0.4f))
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                Brush.verticalGradient(
+                                                    colors = listOf(
+                                                        Color.Black.copy(alpha = 0.6f),
+                                                        Color.Transparent
+                                                    ),
+                                                    startY = 0f,
+                                                    endY = 600f
+                                                )
+                                            )
+                                    )
+                                    VideoProgress(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter), viewModel
+                                    )
+                                }
+                            }
+                        }
+
+                        1 -> {
+                            TimerProgress(viewModel = viewModel)
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(2) { index ->
+                        val color = if (pagerState.currentPage == index)
+                            Color.White else Color(0xFFB0B0B0)
+
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.4f))
+                                .padding(horizontal = 4.dp)
+                                .size(6.dp)
+                                .background(color = color, shape = MaterialTheme.shapes.small)
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Black.copy(alpha = 0.6f),
-                                        Color.Transparent
-                                    ),
-                                    startY = 0f,
-                                    endY = 600f
-                                )
-                            )
-                    )
                 }
             }
+
 
             Row(
                 modifier = Modifier
@@ -252,6 +293,8 @@ fun WorkoutDetailScreen(
                     contentAlignment = Alignment.Center,
                     label = "StateTextAnimation"
                 ) { text ->
+                    if(pagerState.currentPage == 1 && text == "Recover")
+                        return@AnimatedContent
                     Text(
                         text = text,
                         color = Color.White,
@@ -402,49 +445,6 @@ fun WorkoutDetailScreen(
         }
 
 
-        currentExercise?.let { exercise ->
-            when (exerciseState) {
-
-                ExerciseState.active -> {
-                    when (exercise.basedType) {
-                        "Time", "Time & Reps" -> {
-                            ProgressLine(
-                                durationMillis = exercise.time * 1000,
-                                progressTrigger = exercise.time,
-                                isPaused = isPaused,
-                                currentProgressMillis = elapsed
-                            )
-                        }
-
-                        "Reps" -> {
-                            PulsingLines(
-                                pausePerRepMillis = viewModel.timePerRepMillis(exercise).toInt(),
-                                repPauseTrigger = repCount,
-                                isPaused = isPaused,
-                                currentProgressMillis = (timeCurrentRep * 1000).roundToInt()
-                            )
-                        }
-                    }
-                }
-
-                ExerciseState.rest -> {
-                    ProgressLine(
-                        durationMillis = exercise.rest * 1000,
-                        progressTrigger = exercise.rest,
-                        isPaused = isPaused,
-                        currentProgressMillis = elapsed * 1000
-                    )
-                }
-
-                else -> Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .background(BorderGrayColor)
-                )
-
-            }
-        }
 
         Column(
             modifier = Modifier
@@ -566,255 +566,5 @@ fun WorkoutDetailScreen(
         }
     }
 }
-
-
-@Composable
-fun SetsCounter(
-    currentSet: Int,
-    totalSets: Int,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "SET $currentSet/$totalSets",
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            letterSpacing = 1.sp,
-            color = Color.White,
-            fontFamily = BeatriceFontFamily
-        )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            for (idx in 0 until totalSets) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 24.dp, height = 2.dp)
-                        .background(
-                            color = if (idx < currentSet) Color.White else Color(0xFFB0B0B0)
-                        )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PulsingLines(
-    pausePerRepMillis: Int,
-    repPauseTrigger: Int,
-    isPaused: Boolean,
-    currentProgressMillis: Int,
-) {
-    val progress = remember { Animatable(0f) }
-    val lastProgress = remember { mutableFloatStateOf(0f) }
-    var direction by remember { mutableIntStateOf(1) }
-    var wasPausedMidway by remember { mutableStateOf(false) }
-    var needsSecondPhase by remember { mutableStateOf(false) }
-    var isStarted by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val audioPlayer = remember { AudioPlayer(context) }
-
-
-    val half = pausePerRepMillis / 2
-
-    val initialProgress = remember(pausePerRepMillis, currentProgressMillis) {
-        (currentProgressMillis / pausePerRepMillis.toFloat()).coerceIn(0f, 1f)
-    }
-
-    LaunchedEffect(Unit) {
-        if (!isStarted && initialProgress > 0f) {
-            direction = if (initialProgress <= 0.5f) 1 else -1
-            wasPausedMidway = if (initialProgress <= 0.5f) false else true
-            if (direction == 1)
-                needsSecondPhase = true
-            else
-                needsSecondPhase = false
-            val startProgress = if (direction == 1) initialProgress else 1f - initialProgress
-            val remainingMillis = (startProgress * half).toInt()
-
-            progress.snapTo(initialProgress)
-            lastProgress.floatValue = initialProgress
-            isStarted = true
-
-            progress.animateTo(
-                targetValue = if (direction == 1) 1f else 0f,
-                animationSpec = tween(durationMillis = remainingMillis, easing = LinearEasing)
-            )
-        }
-    }
-
-    LaunchedEffect(repPauseTrigger) {
-        if (repPauseTrigger > 0 && !isPaused) {
-            audioPlayer.play(R.raw.bip)
-            progress.snapTo(0f)
-            direction = 1
-            lastProgress.floatValue = 0f
-            wasPausedMidway = false
-            needsSecondPhase = true
-
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = half, easing = LinearEasing)
-            )
-
-            direction = -1
-            needsSecondPhase = false
-
-            progress.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(durationMillis = half, easing = LinearEasing)
-            )
-        }
-    }
-
-    LaunchedEffect(isPaused) {
-        if (isPaused && progress.isRunning) {
-            progress.stop()
-            lastProgress.floatValue = progress.value
-            wasPausedMidway = true
-        } else {
-            if (
-                repPauseTrigger > 0 &&
-                wasPausedMidway &&
-                lastProgress.floatValue in 0f..1f
-            ) {
-                val remaining =
-                    ((if (direction == 1) 1f - lastProgress.floatValue else lastProgress.floatValue) * half).toInt()
-
-                progress.snapTo(lastProgress.floatValue)
-
-                progress.animateTo(
-                    targetValue = if (direction == 1) 1f else 0f,
-                    animationSpec = tween(durationMillis = remaining, easing = LinearEasing)
-                )
-
-                if (needsSecondPhase) {
-                    direction = -1
-                    needsSecondPhase = false
-                    progress.animateTo(
-                        targetValue = 0f,
-                        animationSpec = tween(durationMillis = half, easing = LinearEasing)
-                    )
-                }
-
-                wasPausedMidway = false
-            }
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(6.dp)
-            .background(BorderGrayColor)
-            .drawWithContent {
-                val centerX = size.width / 2
-                val centerY = size.height / 2
-                val lineHeight = size.height
-
-                val offsetX = centerX * progress.value
-
-                if (progress.value > 0f) {
-                    drawLine(
-                        color = BespokeBlue,
-                        start = Offset(centerX, centerY),
-                        end = Offset(centerX - offsetX, centerY),
-                        strokeWidth = lineHeight,
-                        cap = StrokeCap.Round
-                    )
-                    drawLine(
-                        color = BespokeBlue,
-                        start = Offset(centerX, centerY),
-                        end = Offset(centerX + offsetX, centerY),
-                        strokeWidth = lineHeight,
-                        cap = StrokeCap.Round
-                    )
-                }
-            }
-    )
-}
-
-
-@Composable
-fun ProgressLine(
-    durationMillis: Int,
-    progressTrigger: Int,
-    isPaused: Boolean,
-    currentProgressMillis: Int,
-) {
-    val progress = remember { Animatable(0f) }
-    val lastProgress = remember { mutableFloatStateOf(0f) }
-    var isStarted by remember { mutableStateOf(false) }
-
-    val initialProgress = remember(durationMillis, currentProgressMillis) {
-        if (durationMillis > 0) currentProgressMillis / durationMillis.toFloat() else 0f
-    }
-
-    LaunchedEffect(Unit) {
-        Log.e("initialProgress", "${initialProgress}")
-        if (!isStarted && initialProgress > 0f) {
-            progress.snapTo(initialProgress)
-            lastProgress.floatValue = progress.value
-            isStarted = true
-            progress.animateTo(
-                targetValue = initialProgress,
-                animationSpec = tween(durationMillis = durationMillis, easing = LinearEasing)
-            )
-        }
-    }
-
-    LaunchedEffect(progressTrigger) {
-        if (progressTrigger > 0) {
-            progress.snapTo(0f)
-            lastProgress.floatValue = 0f
-            isStarted = true
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = durationMillis, easing = LinearEasing)
-            )
-        }
-    }
-
-    LaunchedEffect(isPaused) {
-        if (isPaused && progress.isRunning) {
-            progress.stop()
-            lastProgress.floatValue = progress.value
-        } else if (!isPaused && lastProgress.floatValue in 0f..1f) {
-            val remaining = ((1f - lastProgress.floatValue) * durationMillis).toInt()
-            progress.snapTo(lastProgress.floatValue)
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = remaining, easing = LinearEasing)
-            )
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(6.dp)
-            .background(Color.LightGray)
-            .drawWithContent {
-                val width = size.width
-                val centerY = size.height / 2
-                val progressWidth = width * progress.value
-
-                drawLine(
-                    color = Green,
-                    start = Offset(0f, centerY),
-                    end = Offset(progressWidth, centerY),
-                    strokeWidth = size.height,
-                    cap = StrokeCap.Round
-                )
-            }
-    )
-}
-
-
 
 

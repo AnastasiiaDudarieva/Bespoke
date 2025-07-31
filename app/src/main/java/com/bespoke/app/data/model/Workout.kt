@@ -146,10 +146,11 @@ fun Workout.isWorkoutComplete(): Boolean {
     val totalExercises = _program?.sections
         ?.flatMap { it.entries?: emptyList() }
         ?.size ?: return false
-
     val finishedExercises = completedExerciseEntries
         .values
         .count { it.status == ExerciseState.setsFinished.name }
 
+    Log.e("totalExercises", "${totalExercises}")
+    Log.e("finishedExercises", "${finishedExercises}")
     return finishedExercises == totalExercises
 }

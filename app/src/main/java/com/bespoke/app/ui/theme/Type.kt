@@ -11,7 +11,8 @@ import com.bespoke.app.R
 val BeatriceFontFamily = FontFamily(
     Font(R.font.beatrice_regular, FontWeight.Normal),
     Font(R.font.beatrice_semibold, FontWeight.W600),
-    Font(R.font.beatrice_bold, FontWeight.Bold)
+    Font(R.font.beatrice_bold, FontWeight.Bold),
+    Font(R.font.beatrice_thin, FontWeight.Thin),
 )
 
 // Set of Material typography styles to start with

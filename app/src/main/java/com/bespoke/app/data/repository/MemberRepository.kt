@@ -5,7 +5,6 @@ import android.util.Log
 import com.bespoke.app.data.model.Equipment
 import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.ExerciseEntryInProgress
-import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.data.model.Media
 import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
@@ -432,7 +431,7 @@ class MemberRepository @Inject constructor(
 
     suspend fun updateWorkout(
         workout: Workout,
-        entryInProgress: ExerciseEntryInProgress
+        entryInProgress: ExerciseEntryInProgress,
     ) {
         val memberId = currentUserId() ?: throw IllegalStateException("Member not loaded")
 
@@ -450,17 +449,19 @@ class MemberRepository @Inject constructor(
         var caloriesBurned = workout.caloriesBurned
         var effort = workout.effort
 
-        Log.e("workout.isWorkoutComplete()", "${workout.isWorkoutComplete()}")
-        if (workout.isWorkoutComplete() && workout.completedAt == null) {
+
+        var updatedWorkout = workout.copy(
+            exerciseEntryInProgress = entryInProgress,
+            completedExerciseEntries = updatedCompletedEntries,
+        )
+        Log.e("updatedWorkout.isWorkoutComplete()", "${updatedWorkout.isWorkoutComplete()}")
+        if (updatedWorkout.isWorkoutComplete() && updatedWorkout.completedAt == null) {
             completedAt = (System.currentTimeMillis() / 1000).toInt()
-            sessionTimeSecs = completedAt - workout.startedAt
+            sessionTimeSecs = completedAt - updatedWorkout.startedAt
             caloriesBurned = (sessionTimeSecs / 60.0) * 10
             effort = 0.5
         }
-
-        val updatedWorkout = workout.copy(
-            exerciseEntryInProgress = entryInProgress,
-            completedExerciseEntries = updatedCompletedEntries,
+        updatedWorkout = workout.copy(
             completedAt = completedAt,
             sessionTimeSecs = sessionTimeSecs,
             caloriesBurned = caloriesBurned,
