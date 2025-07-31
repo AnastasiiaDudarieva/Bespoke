@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.PastWorkout
@@ -53,6 +54,7 @@ class ProgramsViewModel @Inject constructor(
         val completedWorkoutsToday = allWorkouts.filter {
             Date(it.completedAt!! * 1000L).toStartOfDay() == today
         }
+        Log.e("completedWorkoutsToday", "${completedWorkoutsToday.size}")
 
         val inProgressWorkouts = memberRepository.workouts.value.filter {
             it.completedAt == null || it.effort == null
@@ -79,7 +81,7 @@ class ProgramsViewModel @Inject constructor(
         }
         _uiState.value = ProgramsUiState(
             pastWorkouts = pastWorkouts,
-            todayWorkouts = todaysWorkouts.sortedBy { it._program?.createdAt ?: 0L },
+            todayWorkouts = todaysWorkouts,
             todayPrograms = todaysPrograms,
             upcomingPrograms = upcomingPrograms
         )

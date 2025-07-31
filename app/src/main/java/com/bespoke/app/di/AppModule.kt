@@ -11,6 +11,7 @@ import com.bespoke.app.data.LoggingInterceptor
 import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.data.services.AuthService
 import com.bespoke.app.data.services.FirebaseService
+import com.bespoke.app.utils.AudioPlayer
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore

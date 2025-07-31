@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.ExerciseEntry
+import com.bespoke.app.data.model.ExerciseEntryInProgress
+import com.bespoke.app.data.model.ExerciseFeedback
 import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.data.model.Workout
+import com.bespoke.app.data.model.timePerRep
 import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.utils.FirebaseStorageUrlCache
 import com.bespoke.app.utils.getFirebaseDownloadUrl
@@ -16,29 +19,31 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.min
+
 
 @HiltViewModel
 class WorkoutDetailViewModel @Inject constructor(
     val memberRepository: MemberRepository,
 ) : ViewModel() {
 
-    // --- Workout / Exercise state ---
     private val _currentWorkout = MutableStateFlow<Workout?>(null)
+    private val currentWorkout: StateFlow<Workout?> = _currentWorkout
 
     private val _currentExerciseEntry = MutableStateFlow<ExerciseEntry?>(null)
     val currentExerciseEntry: StateFlow<ExerciseEntry?> = _currentExerciseEntry
 
-    private val _exerciseState = MutableStateFlow(ExerciseState.setsFinished)
+    private val _exerciseState = MutableStateFlow(ExerciseState.setsStart)
     val exerciseState: StateFlow<ExerciseState> = _exerciseState
 
     private val _currentSet = MutableStateFlow(1)
     val currentSet: StateFlow<Int> = _currentSet
 
-    private val _isPaused = MutableStateFlow(true)
+    private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused
 
     private val _timerValue = MutableStateFlow(0)
@@ -50,10 +55,19 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _stateText = MutableStateFlow("")
     val stateText: StateFlow<String> = _stateText
 
+    private val _isPausedBtwnRep = MutableStateFlow(false)
+    val isPausedBtwnRep: StateFlow<Boolean> = _isPausedBtwnRep
+
     private val _preActiveCount = MutableStateFlow(0)
 
     val videoUrl = MutableStateFlow<Uri?>(null)
     val thumbnailUrl = MutableStateFlow<Uri?>(null)
+
+    private val _timeInCurrentRep = MutableStateFlow(0f)
+    val timeInCurrentRep: StateFlow<Float> = _timeInCurrentRep
+
+    var exerciseDuration = 0
+    private var durationJob: Job? = null
 
 
     private var countdownJob: Job? = null
@@ -84,13 +98,6 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun togglePause() {
         val currentState = _exerciseState.value
-
-        if (currentState == ExerciseState.setsFinished) {
-            _isPaused.value = false
-            startState(ExerciseState.setsStart)
-            return
-        }
-
         val wasPaused = _isPaused.value
         _isPaused.value = !wasPaused
 
@@ -101,37 +108,44 @@ class WorkoutDetailViewModel @Inject constructor(
         } else {
             _stateText.value = ""
             when (currentState) {
+                ExerciseState.setsStart -> startState(ExerciseState.setsStart)
                 ExerciseState.preActive -> startPreActiveCountDown()
                 ExerciseState.active -> resumeActive()
                 ExerciseState.rest -> resumeRest()
                 else -> updateStateText()
             }
         }
+        updateWorkout()
     }
 
     fun toNextExercise() {
         val workout = _currentWorkout.value ?: return
-        val allExercises = workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
+        val allExercises =
+            workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
         val currentIndex = allExercises.indexOfFirst { it.id == current.id }
 
         _isPaused.value = true
         timerJob?.cancel()
         countdownJob?.cancel()
-
+        saveSkippedExercise()
         if (currentIndex + 1 < allExercises.size) {
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
             loadVideoUrlIfNeeded()
+            exerciseDuration = 0
+            startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
         } else {
             startState(ExerciseState.setsFinished)
         }
+        updateWorkout()
     }
 
     fun toNextSet() {
         val workout = _currentWorkout.value ?: return
-        val allExercises = workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
+        val allExercises =
+            workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
         val currentIndex = allExercises.indexOfFirst { it.id == current.id }
 
@@ -139,6 +153,7 @@ class WorkoutDetailViewModel @Inject constructor(
         timerJob?.cancel()
         countdownJob?.cancel()
 
+        saveSkippedSet()
         if (_currentSet.value < current.sets) {
             _currentSet.value += 1
             startState(ExerciseState.setsStart)
@@ -146,13 +161,14 @@ class WorkoutDetailViewModel @Inject constructor(
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
             loadVideoUrlIfNeeded()
+            exerciseDuration = 0
+            startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
         } else {
             startState(ExerciseState.setsFinished)
         }
+        updateWorkout()
     }
-
-
 
 
     private fun resumeActive() {
@@ -183,7 +199,9 @@ class WorkoutDetailViewModel @Inject constructor(
                         delay(timePerRep)
                         if (_isPaused.value) break
 
+                        _isPausedBtwnRep.value = true
                         delay(pausePerRepMillis)
+                        _isPausedBtwnRep.value = false
                         if (_isPaused.value) break
 
                         _counter.value = currentRep.toFloat()
@@ -211,6 +229,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun resumeRest() {
         val restSeconds = _currentExerciseEntry.value?.rest ?: 30
+        _stateText.value = "Recover"
 
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
@@ -226,11 +245,52 @@ class WorkoutDetailViewModel @Inject constructor(
     fun loadWorkout(workoutId: String) {
         val workout = memberRepository.getSelectedWorkout(workoutId)
         _currentWorkout.value = workout
-        val allExercises =
-            workout?._program?.sections?.flatMap { it.entries ?: emptyList() } ?: emptyList()
-        _currentExerciseEntry.value = allExercises.firstOrNull()
-        _currentSet.value = 1
+
+        val inProgress = workout?.exerciseEntryInProgress
+        _currentExerciseEntry.value = inProgress?.currentEntry
+        _currentSet.value = inProgress?.currentSet ?: 1
+        _isPaused.value = inProgress?.isPaused ?: false
+        _isPausedBtwnRep.value = inProgress?.isPausedBtwnRep ?: false
+
+        val frameCount = inProgress?.counter ?: 0
+        val totalSeconds = frameCount / 30f
+        _timerValue.value = totalSeconds.toInt()
+
+        val reps = _currentExerciseEntry.value?.reps ?: 1
+        val timePerRep = _currentExerciseEntry.value?.timePerRep()?.toFloat() ?: 1f
+
+        _counter.value = min((totalSeconds / timePerRep), reps.toFloat())
+        val timeIntoCurrentRep = totalSeconds % timePerRep
+        _timeInCurrentRep.value = timeIntoCurrentRep
+
+        _exerciseState.value = inProgress?.exerciseState ?: ExerciseState.setsStart
+        exerciseDuration = inProgress?.counter ?: 0
+
         loadVideoUrlIfNeeded()
+
+        if (inProgress?.exerciseState != null && inProgress.isPaused == false) {
+            startState(inProgress.exerciseState)
+            if (inProgress.exerciseState == ExerciseState.active) {
+                startExerciseDurationTimer()
+            }
+        } else {
+            if (inProgress?.isPaused == true)
+                _stateText.value = ""
+            else
+                updateStateText()
+        }
+    }
+
+    private fun startExerciseDurationTimer() {
+        durationJob?.cancel()
+        durationJob = viewModelScope.launch {
+            while (isActive) {
+                delay(1000L / 30)
+                if (!_isPaused.value && _exerciseState.value == ExerciseState.active) {
+                    exerciseDuration++
+                }
+            }
+        }
     }
 
     private fun startState(state: ExerciseState) {
@@ -267,8 +327,12 @@ class WorkoutDetailViewModel @Inject constructor(
                 } else if (currentIndex + 1 < allExercises.size) {
                     _currentExerciseEntry.value = allExercises[currentIndex + 1]
                     _currentSet.value = 1
+                    exerciseDuration = 0
+                    startExerciseDurationTimer()
                     loadVideoUrlIfNeeded()
                 } else {
+                    saveFinishedSet()
+                    updateWorkout()
                     startState(ExerciseState.setsFinished)
                     return
                 }
@@ -287,17 +351,10 @@ class WorkoutDetailViewModel @Inject constructor(
             }
 
 
-            ExerciseState.setsFinished -> _stateText.value = "Workout Complete"
-        }
-    }
+            ExerciseState.setsFinished -> {
+                _stateText.value = "Complete!"
+            }
 
-    private fun proceedToNextSetOrFinish() {
-        val totalSets = currentExerciseEntry.value?.sets ?: 3
-        if (_currentSet.value < totalSets) {
-            _currentSet.value += 1
-            startState(ExerciseState.preActive)
-        } else {
-            startState(ExerciseState.setsFinished)
         }
     }
 
@@ -310,7 +367,7 @@ class WorkoutDetailViewModel @Inject constructor(
         _stateText.value = when (_exerciseState.value) {
             ExerciseState.setsStart -> ""
             ExerciseState.rest -> "Recover"
-            ExerciseState.setsFinished -> "Workout Complete"
+            ExerciseState.setsFinished -> "Complete!"
             else -> ""
         }
     }
@@ -349,12 +406,12 @@ class WorkoutDetailViewModel @Inject constructor(
         _counter.value = 0f
 
         val exercise = _currentExerciseEntry.value ?: return
-        val basedType = exercise.basedType ?: "Reps"
+        val basedType = exercise.basedType
 
         timerJob = viewModelScope.launch {
             when (basedType) {
                 "Time" -> {
-                    val totalTime = exercise.time ?: 30
+                    val totalTime = exercise.time
                     while (_timerValue.value < totalTime) {
                         while (_isPaused.value) delay(100)
                         delay(1000)
@@ -371,7 +428,9 @@ class WorkoutDetailViewModel @Inject constructor(
                         while (_isPaused.value) delay(100)
                         delay(timePerRep)
                         while (_isPaused.value) delay(100)
+                        _isPausedBtwnRep.value = true
                         delay(pausePerRepMillis)
+                        _isPausedBtwnRep.value = false
                         _counter.value = rep.toFloat()
                     }
                     startState(ExerciseState.preRest)
@@ -413,8 +472,83 @@ class WorkoutDetailViewModel @Inject constructor(
         super.onCleared()
         timerJob?.cancel()
         countdownJob?.cancel()
+        durationJob?.cancel()
     }
 
-    fun selectExercise(currentExercise: ExerciseEntry) = memberRepository.selectExercise(currentExercise)
+    fun selectExercise(currentExercise: ExerciseEntry) =
+        memberRepository.selectExercise(currentExercise)
 
+    fun saveFinishedSet() {
+        val workout = _currentWorkout.value ?: return
+        val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
+        val currentSet = _currentSet.value
+
+        val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
+        val updatedFinishedSets = feedback.finishedSets.toMutableSet()
+        updatedFinishedSets.add(currentSet)
+
+        val updatedFeedback = feedback.copy(finishedSets = updatedFinishedSets.toList())
+        updateExerciseFeedback(exerciseId, updatedFeedback)
+    }
+
+    fun saveSkippedSet() {
+        val workout = _currentWorkout.value ?: return
+        val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
+        val currentSet = _currentSet.value
+
+        val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
+        val updatedSkippedSets = feedback.skipedSets.toMutableSet()
+        updatedSkippedSets.add(currentSet)
+
+        val updatedFeedback = feedback.copy(skipedSets = updatedSkippedSets.toList())
+        updateExerciseFeedback(exerciseId, updatedFeedback)
+    }
+
+    fun saveSkippedExercise() {
+        val workout = _currentWorkout.value ?: return
+        val entry = _currentExerciseEntry.value ?: return
+        val exerciseId = entry.exerciseId ?: ""
+        val currentSet = _currentSet.value
+
+        val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
+        val skippedSets = feedback.skipedSets.toMutableSet()
+
+        if (!skippedSets.contains(currentSet)) {
+            skippedSets.add(currentSet)
+        }
+
+        if (currentSet < entry.sets) {
+            skippedSets.addAll((currentSet + 1)..entry.sets)
+        }
+
+        val updatedFeedback = feedback.copy(skipedSets = skippedSets.toList())
+        updateExerciseFeedback(exerciseId, updatedFeedback)
+    }
+
+    private fun updateExerciseFeedback(
+        exerciseId: String,
+        updatedFeedback: ExerciseFeedback,
+    ) {
+        val workout = _currentWorkout.value ?: return
+        val updatedEntries = workout.completedExerciseEntries.toMutableMap()
+        updatedEntries[exerciseId] = updatedFeedback.copy(status = ExerciseState.setsFinished.name)
+
+        _currentWorkout.value = workout.copy(completedExerciseEntries = updatedEntries)
+    }
+
+
+    fun updateWorkout() {
+        viewModelScope.launch {
+            val updatedEntryInProgress = ExerciseEntryInProgress(
+                currentEntry = currentExerciseEntry.value,
+                exerciseState = exerciseState.value,
+                currentSet = currentSet.value,
+                isPaused = isPaused.value,
+                isPausedBtwnRep = isPausedBtwnRep.value,
+                counter = exerciseDuration
+            )
+
+            currentWorkout.value?.let { memberRepository.updateWorkout(it, updatedEntryInProgress) }
+        }
+    }
 }

@@ -97,6 +97,6 @@ fun ExerciseEntry.timeForUse(): Int {
         else -> 3 * reps
     }
 }
-
+fun ExerciseEntry.timePerRep() = timeForUse() / reps
 
 

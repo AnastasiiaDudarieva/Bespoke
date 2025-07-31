@@ -4,9 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.Equipment
 import com.bespoke.app.data.model.ExerciseEntry
-import com.bespoke.app.data.model.ExerciseEntryInProgress
 import com.bespoke.app.data.model.Program
-import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.repository.MemberRepository
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage

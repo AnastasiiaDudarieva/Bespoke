@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.R
+import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.model.lengthDisplay
 import com.bespoke.app.ui.screens.components.base.FirebaseStorageImageView
@@ -53,7 +54,7 @@ fun TodayWorkoutRow(
     ) {
     val program = workout._program
     val completedExercisesCount =
-        workout.completedExerciseEntries?.values?.count { it.status == "setsFinished" }
+        workout.completedExerciseEntries.values.count { it.status == ExerciseState.setsFinished.name }
     val totalExercises = program?.sections?.flatMap { it.entries!! }?.size
     val workoutIsComplete = completedExercisesCount == totalExercises && workout.effort != null
     var isLoading by remember { mutableStateOf(false) }

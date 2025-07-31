@@ -5,6 +5,7 @@ import android.util.Log
 import com.bespoke.app.data.model.Equipment
 import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.ExerciseEntryInProgress
+import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.data.model.Media
 import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
@@ -12,6 +13,7 @@ import com.bespoke.app.data.model.PastWorkout
 import com.bespoke.app.data.model.Program
 import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.model.Workout
+import com.bespoke.app.data.model.isWorkoutComplete
 import com.bespoke.app.data.model.requiredWorkoutDays
 import com.bespoke.app.data.services.AuthService
 import com.bespoke.app.utils.FirebaseStorageUrlCache
@@ -20,6 +22,7 @@ import com.bespoke.app.utils.toStartOfDay
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope
@@ -181,7 +184,6 @@ class MemberRepository @Inject constructor(
                 }
                 if (error != null || snapshot == null) return@addSnapshotListener
                 val programList = snapshot.documents.mapNotNull { doc ->
-
                     doc.toObject(Program::class.java)
                 }
                 _programs.value = programList
@@ -198,10 +200,10 @@ class MemberRepository @Inject constructor(
                 snapshot?.let {
                     val result =
                         it.documents.mapNotNull { doc ->
-                            Log.e("doc", "${doc}")
+                            Log.e("doc Workout", "$doc")
                             doc.toObject(Workout::class.java)
                         }
-                    _workouts.value = result.sortedBy { workout -> workout.completedAt ?: 0 }
+                    _workouts.value = result.sortedBy { workout -> workout.startedAt }
                 }
             }
     }
@@ -426,6 +428,51 @@ class MemberRepository @Inject constructor(
 
         loadWorkoutData(result)
         return result
+    }
+
+    suspend fun updateWorkout(
+        workout: Workout,
+        entryInProgress: ExerciseEntryInProgress
+    ) {
+        val memberId = currentUserId() ?: throw IllegalStateException("Member not loaded")
+
+        val workoutRef = firestore
+            .collection("members")
+            .document(memberId)
+            .collection("workouts")
+            .document(workout.id ?: "")
+
+        val updatedCompletedEntries = workout.completedExerciseEntries.toMutableMap()
+
+
+        var completedAt = workout.completedAt
+        var sessionTimeSecs = workout.sessionTimeSecs
+        var caloriesBurned = workout.caloriesBurned
+        var effort = workout.effort
+
+        Log.e("workout.isWorkoutComplete()", "${workout.isWorkoutComplete()}")
+        if (workout.isWorkoutComplete() && workout.completedAt == null) {
+            completedAt = (System.currentTimeMillis() / 1000).toInt()
+            sessionTimeSecs = completedAt - workout.startedAt
+            caloriesBurned = (sessionTimeSecs / 60.0) * 10
+            effort = 0.5
+        }
+
+        val updatedWorkout = workout.copy(
+            exerciseEntryInProgress = entryInProgress,
+            completedExerciseEntries = updatedCompletedEntries,
+            completedAt = completedAt,
+            sessionTimeSecs = sessionTimeSecs,
+            caloriesBurned = caloriesBurned,
+            effort = effort
+        )
+
+        try {
+            workoutRef.set(updatedWorkout, SetOptions.merge()).await()
+            Log.d("WorkoutUpdate", "Workout updated successfully via set(merge)")
+        } catch (e: Exception) {
+            Log.e("WorkoutUpdate", "Failed to update workout", e)
+        }
     }
 
 
