@@ -46,7 +46,7 @@ import kotlin.math.roundToInt
 
 
 @Composable
-fun TimerProgress(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewModel) {
+fun TimerPage(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewModel) {
     val exerciseState by viewModel.exerciseState.collectAsState()
     val currentExercise by viewModel.currentExerciseEntry.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()

@@ -128,6 +128,7 @@ class WorkoutDetailViewModel @Inject constructor(
         _isPaused.value = true
         timerJob?.cancel()
         countdownJob?.cancel()
+        _exerciseState.value = ExerciseState.setsFinished
         saveSkippedExercise()
         if (currentIndex + 1 < allExercises.size) {
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
@@ -151,18 +152,21 @@ class WorkoutDetailViewModel @Inject constructor(
         _isPaused.value = true
         timerJob?.cancel()
         countdownJob?.cancel()
-
-        saveSkippedSet()
         if (_currentSet.value < current.sets) {
             _currentSet.value += 1
+            saveSkippedSet()
             startState(ExerciseState.setsStart)
         } else if (currentIndex + 1 < allExercises.size) {
+            _exerciseState.value = ExerciseState.setsFinished
+            saveSkippedSet()
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
             exerciseDuration = 0
             startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
         } else {
+            _exerciseState.value = ExerciseState.setsFinished
+            saveSkippedSet()
             startState(ExerciseState.setsFinished)
         }
         updateWorkout()

@@ -48,4 +48,6 @@
     <string name="upcoming_programs_empty_message"><![CDATA[Message your provider to get started with personalized fitness & recovery programs.]]></string>
     <string name="program_overview">Program Overview</string>
     <string name="equipment_needed">Equipment Needed</string>
+    <string name="next">Next</string>
+    <string name="review">Review</string>
 </resources>

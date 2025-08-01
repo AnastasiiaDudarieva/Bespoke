@@ -46,9 +46,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,15 +57,15 @@ import androidx.navigation.NavHostController
 import com.bespoke.app.R
 import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.navigation.Screen
-import com.bespoke.app.ui.screens.components.base.ExoVideoPlayer
 import com.bespoke.app.ui.screens.components.base.KeepScreenOn
 import com.bespoke.app.ui.screens.components.programs.workout.SetsCounter
-import com.bespoke.app.ui.screens.components.programs.workout.TimerProgress
-import com.bespoke.app.ui.screens.components.programs.workout.VideoProgress
+import com.bespoke.app.ui.screens.components.programs.workout.TimerPage
+import com.bespoke.app.ui.screens.components.programs.workout.VideoPage
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.InputBackgroundColor
 import com.bespoke.app.ui.theme.TextDark
+import com.bespoke.app.ui.theme.iconSize
 import com.bespoke.app.ui.viewmodel.WorkoutDetailViewModel
 import com.bespoke.app.utils.AudioPlayer
 import kotlinx.coroutines.launch
@@ -84,8 +84,6 @@ fun WorkoutDetailScreen(
     val exerciseState by viewModel.exerciseState.collectAsState()
     val currentExercise by viewModel.currentExerciseEntry.collectAsState()
     val currentSet by viewModel.currentSet.collectAsState()
-    val videoUrl by viewModel.videoUrl.collectAsState()
-    val thumbnailUrl by viewModel.thumbnailUrl.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val stateText by viewModel.stateText.collectAsState()
 
@@ -110,6 +108,7 @@ fun WorkoutDetailScreen(
         if (repCount > 0)
             audioPlayer.play(R.raw.bip)
     }
+ 
     LaunchedEffect(exerciseState) {
         if (isPaused)
             return@LaunchedEffect
@@ -145,48 +144,9 @@ fun WorkoutDetailScreen(
                     modifier = Modifier.fillMaxSize()
                 ) { page ->
                     when (page) {
-                        0 -> {
-                            videoUrl?.let { url ->
+                        0 -> VideoPage(viewModel = viewModel)
 
-                                Box(modifier = Modifier.fillMaxSize()) {
-                                    ExoVideoPlayer(
-                                        videoUrl = url,
-                                        thumbnailUrl = thumbnailUrl,
-                                    )
-                                    if ((isPaused && exerciseState != ExerciseState.setsStart
-                                                && viewModel.exerciseDuration == 0) || exerciseState == ExerciseState.rest
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(Color.Black.copy(alpha = 0.4f))
-                                        )
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(
-                                                Brush.verticalGradient(
-                                                    colors = listOf(
-                                                        Color.Black.copy(alpha = 0.6f),
-                                                        Color.Transparent
-                                                    ),
-                                                    startY = 0f,
-                                                    endY = 600f
-                                                )
-                                            )
-                                    )
-                                    VideoProgress(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter), viewModel
-                                    )
-                                }
-                            }
-                        }
-
-                        1 -> {
-                            TimerProgress(viewModel = viewModel)
-                        }
+                        1 -> TimerPage(viewModel = viewModel)
                     }
                 }
                 Row(
@@ -209,7 +169,6 @@ fun WorkoutDetailScreen(
                 }
             }
 
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -230,7 +189,7 @@ fun WorkoutDetailScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(iconSize)
                             .background(
                                 Color.White,
                                 shape = CircleShape
@@ -245,18 +204,19 @@ fun WorkoutDetailScreen(
                         )
                     }
                 }
-                if (currentExercise != null) {
+                currentExercise?.let {
                     SetsCounter(
                         currentSet = currentSet,
-                        totalSets = currentExercise?.sets ?: 1
+                        totalSets = it.sets
                     )
                 }
+
                 IconButton(
                     onClick = { /* TODO: Show list of all exercises  */ },
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(iconSize)
                             .background(
                                 Color.White,
                                 shape = CircleShape
@@ -319,7 +279,7 @@ fun WorkoutDetailScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = currentExercise!!.name ?: "Exercise",
+                            text = exercise.name ?: "Exercise",
                             fontSize = 18.sp,
                             color = Color.White,
                             fontFamily = BeatriceFontFamily,
@@ -330,7 +290,7 @@ fun WorkoutDetailScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(32.dp)
+                                    .size(iconSize)
                                     .background(
                                         Color.White.copy(alpha = 0.5f),
                                         shape = CircleShape
@@ -437,7 +397,7 @@ fun WorkoutDetailScreen(
 
 
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(iconSize))
                 }
             }
 
@@ -483,14 +443,14 @@ fun WorkoutDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.ChecklistRtl,
-                            contentDescription = "Review",
+                            contentDescription = stringResource(R.string.review),
                             tint = TextDark,
                             modifier = Modifier.size(28.dp)
                         )
                     }
 
                     Text(
-                        text = "Review",
+                        text = stringResource(R.string.review),
                         fontSize = 14.sp,
                         color = TextDark,
                         fontFamily = BeatriceFontFamily,
@@ -547,13 +507,13 @@ fun WorkoutDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Next",
+                            contentDescription = stringResource(R.string.next),
                             tint = TextDark,
                             modifier = Modifier.size(28.dp)
                         )
                     }
                     Text(
-                        text = "Next",
+                        text = stringResource(R.string.next),
                         fontSize = 14.sp,
                         color = TextDark,
                         fontFamily = BeatriceFontFamily,
@@ -566,5 +526,4 @@ fun WorkoutDetailScreen(
         }
     }
 }
-
 
