@@ -1,5 +1,6 @@
 package com.bespoke.app.data.model
 
+import android.util.Log
 import com.bespoke.app.utils.getDayName
 import com.bespoke.app.utils.toStartOfDay
 import com.google.firebase.firestore.DocumentId
@@ -68,9 +69,9 @@ data class UpcomingProgram(
 
 fun Program.requiredWorkoutDays(): List<Date> {
     val result = mutableListOf<Date>()
-    var date = Date(createdAt?.times(1000) ?: 0L).toStartOfDay()
+    var date = Date(createdAt?.times(1000) ?: 0L)
     val cal = Calendar.getInstance()
-    while (date.before(Date().toStartOfDay())) {
+    while (date.before(Date())) {
         cal.time = date
         if (days?.contains(cal.getDayName()) == true) {
             result.add(cal.time)

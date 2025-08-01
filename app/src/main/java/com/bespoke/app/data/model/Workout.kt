@@ -149,8 +149,5 @@ fun Workout.isWorkoutComplete(): Boolean {
     val finishedExercises = completedExerciseEntries
         .values
         .count { it.status == ExerciseState.setsFinished.name }
-
-    Log.e("totalExercises", "${totalExercises}")
-    Log.e("finishedExercises", "${finishedExercises}")
     return finishedExercises == totalExercises
 }

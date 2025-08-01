@@ -30,9 +30,9 @@ class HomeViewModel @Inject constructor(
                 if (pastWorkouts.isNotEmpty()) {
                     val longest = memberRepository.getStreakDataStats()?.longestStreak ?: 0
                     val completedPrograms =
-                        memberRepository.pastWorkouts.value.count { it.didComplete }
+                        pastWorkouts.count { it.didComplete }
                     val totalCalories =
-                        memberRepository.pastWorkouts.value.sumOf { it.calloriesBurned }
+                        pastWorkouts.sumOf { it.calloriesBurned }
                             .roundToInt()
 
                     val statistics = Statistics(

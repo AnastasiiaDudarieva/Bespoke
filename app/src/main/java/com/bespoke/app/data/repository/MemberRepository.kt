@@ -199,7 +199,6 @@ class MemberRepository @Inject constructor(
                 snapshot?.let {
                     val result =
                         it.documents.mapNotNull { doc ->
-                            Log.e("doc Workout", "$doc")
                             doc.toObject(Workout::class.java)
                         }
                     _workouts.value = result.sortedBy { workout -> workout.startedAt }
@@ -278,7 +277,6 @@ class MemberRepository @Inject constructor(
         val published = programs.value.filter { it.status == Program.Status.PUBLISHED.value }
         val workouts = completedWorkouts
         val pastList = mutableListOf<PastWorkout>()
-
         for (program in published) {
             val requiredDates = program.requiredWorkoutDays()
             for (date in requiredDates) {
@@ -287,17 +285,16 @@ class MemberRepository @Inject constructor(
                             Date(it.completedAt!! * 1000L).toStartOfDay() == date.toStartOfDay()
                 }
 
-                val calloriesBurned = workouts.filter {
+                val caloriesBurned = workouts.filter {
                     it.programId == program.id &&
                             Date(it.completedAt!! * 1000L).toStartOfDay() == date.toStartOfDay()
                 }.sumOf { it.caloriesBurned }
-
                 pastList.add(
                     PastWorkout(
                         completedAt = (date.time / 1000L).toInt(),
                         program = program,
                         didComplete = didComplete,
-                        calloriesBurned = calloriesBurned
+                        calloriesBurned = caloriesBurned
                     )
                 )
             }
@@ -454,7 +451,6 @@ class MemberRepository @Inject constructor(
             exerciseEntryInProgress = entryInProgress,
             completedExerciseEntries = updatedCompletedEntries,
         )
-        Log.e("updatedWorkout.isWorkoutComplete()", "${updatedWorkout.isWorkoutComplete()}")
         if (updatedWorkout.isWorkoutComplete() && updatedWorkout.completedAt == null) {
             completedAt = (System.currentTimeMillis() / 1000).toInt()
             sessionTimeSecs = completedAt - updatedWorkout.startedAt

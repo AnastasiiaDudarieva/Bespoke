@@ -54,7 +54,6 @@ class ProgramsViewModel @Inject constructor(
         val completedWorkoutsToday = allWorkouts.filter {
             Date(it.completedAt!! * 1000L).toStartOfDay() == today
         }
-        Log.e("completedWorkoutsToday", "${completedWorkoutsToday.size}")
 
         val inProgressWorkouts = memberRepository.workouts.value.filter {
             it.completedAt == null || it.effort == null
