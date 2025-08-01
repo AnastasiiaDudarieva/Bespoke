@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -58,6 +57,7 @@ import com.bespoke.app.R
 import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.navigation.Screen
 import com.bespoke.app.ui.screens.components.base.KeepScreenOn
+import com.bespoke.app.ui.screens.components.programs.workout.CenteredTextWithIcon
 import com.bespoke.app.ui.screens.components.programs.workout.SetsCounter
 import com.bespoke.app.ui.screens.components.programs.workout.TimerPage
 import com.bespoke.app.ui.screens.components.programs.workout.VideoPage
@@ -108,7 +108,7 @@ fun WorkoutDetailScreen(
         if (repCount > 0)
             audioPlayer.play(R.raw.bip)
     }
- 
+
     LaunchedEffect(exerciseState) {
         if (isPaused)
             return@LaunchedEffect
@@ -125,7 +125,7 @@ fun WorkoutDetailScreen(
     }
 
     LaunchedEffect(currentExercise) {
-        viewModel.loadVideoUrlIfNeeded()
+        viewModel.loadMediaUrlsIfNeeded()
     }
 
     Column(
@@ -253,7 +253,7 @@ fun WorkoutDetailScreen(
                     contentAlignment = Alignment.Center,
                     label = "StateTextAnimation"
                 ) { text ->
-                    if(pagerState.currentPage == 1 && text == "Recover")
+                    if (pagerState.currentPage == 1 && text == "Recover")
                         return@AnimatedContent
                     Text(
                         text = text,
@@ -277,36 +277,16 @@ fun WorkoutDetailScreen(
                         .padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+
+                        CenteredTextWithIcon(
                             text = exercise.name ?: "Exercise",
-                            fontSize = 18.sp,
-                            color = Color.White,
-                            fontFamily = BeatriceFontFamily,
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(
-                            onClick = { viewModel.toNextExercise() }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(iconSize)
-                                    .background(
-                                        Color.White.copy(alpha = 0.5f),
-                                        shape = CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = "Next Exercise",
-                                    tint = TextDark.copy(alpha = 0.5f)
-                                )
-
-                            }
-                        }
+                            onNext = { viewModel.toNextExercise() })
                     }
+
 
                     when (exerciseState) {
                         ExerciseState.setsStart, ExerciseState.preActive, ExerciseState.setsFinished -> {

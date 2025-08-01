@@ -8,6 +8,7 @@ import com.bespoke.app.data.model.ExerciseEntryInProgress
 import com.bespoke.app.data.model.ExerciseFeedback
 import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.data.model.Workout
+import com.bespoke.app.data.model.isWorkoutComplete
 import com.bespoke.app.data.model.timePerRep
 import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.utils.FirebaseStorageUrlCache
@@ -120,6 +121,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun toNextExercise() {
         val workout = _currentWorkout.value ?: return
+        if(workout.isWorkoutComplete())return
         val allExercises =
             workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
@@ -144,6 +146,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun toNextSet() {
         val workout = _currentWorkout.value ?: return
+        if(workout.isWorkoutComplete())return
         val allExercises =
             workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
@@ -298,63 +301,69 @@ class WorkoutDetailViewModel @Inject constructor(
         updateStateText()
 
         when (state) {
-            ExerciseState.setsStart -> viewModelScope.launch {
-                delay(1000)
-                startState(ExerciseState.preActive)
-            }
-
-            ExerciseState.preActive -> startPreActiveCountDown()
-
-            ExerciseState.active -> startActiveTimer()
-
-            ExerciseState.preRest -> viewModelScope.launch {
-                delay(1000)
-                startState(ExerciseState.rest)
-            }
-
-            ExerciseState.rest -> {
-                _stateText.value = "Recover"
-                _timerValue.value = 0
-
-                val current = _currentExerciseEntry.value ?: return
-                val workout = _currentWorkout.value
-                val allExercises =
-                    workout?._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
-                val currentIndex = allExercises.indexOfFirst { it.id == current.id }
-
-                if (_currentSet.value < current.sets) {
-                    _currentSet.value += 1
-                } else if (currentIndex + 1 < allExercises.size) {
-                    _currentExerciseEntry.value = allExercises[currentIndex + 1]
-                    _currentSet.value = 1
-                    exerciseDuration = 0
-                    startExerciseDurationTimer()
-                } else {
-                    startState(ExerciseState.setsFinished)
-                    saveFinishedSet()
-                    updateWorkout()
-                    return
-                }
-
-                val restSeconds = _currentExerciseEntry.value?.rest ?: 30
-
-                timerJob?.cancel()
-                timerJob = viewModelScope.launch {
-                    while (_timerValue.value < restSeconds) {
-                        while (_isPaused.value) delay(100)
-                        delay(1000)
-                        _timerValue.value += 1
-                    }
-                    startState(ExerciseState.preActive)
-                }
-            }
-
-
-            ExerciseState.setsFinished -> {
-                _stateText.value = "Complete!"
-            }
-
+            ExerciseState.setsStart -> startSetsStart()
+            ExerciseState.preActive -> startPreActiveState()
+            ExerciseState.active -> startActiveState()
+            ExerciseState.preRest -> startPreRestState()
+            ExerciseState.rest -> startRestState()
+            ExerciseState.setsFinished -> startSetsFinishedState()
         }
+    }
+
+    private fun startSetsStart() {
+        viewModelScope.launch {
+            delay(1000)
+            startState(ExerciseState.preActive)
+        }
+    }
+
+    private fun startPreActiveState() = startPreActiveCountDown()
+
+    private fun startActiveState() = startActiveTimer()
+
+    private fun startPreRestState() {
+        viewModelScope.launch {
+            delay(1000)
+            startState(ExerciseState.rest)
+        }
+    }
+
+    private fun startRestState() {
+        _stateText.value = "Recover"
+        _timerValue.value = 0
+        val current = _currentExerciseEntry.value ?: return
+        val workout = _currentWorkout.value
+        val allExercises =
+            workout?._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
+        val currentIndex = allExercises.indexOfFirst { it.id == current.id }
+
+        if (_currentSet.value < current.sets) {
+            _currentSet.value += 1
+        } else if (currentIndex + 1 < allExercises.size) {
+            _currentExerciseEntry.value = allExercises[currentIndex + 1]
+            _currentSet.value = 1
+            exerciseDuration = 0
+            startExerciseDurationTimer()
+        } else {
+            startState(ExerciseState.setsFinished)
+            saveFinishedSet()
+            updateWorkout()
+            return
+        }
+        val restSeconds = _currentExerciseEntry.value?.rest ?: 3
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            while (_timerValue.value < restSeconds) {
+                while (_isPaused.value) delay(100)
+                delay(1000)
+                _timerValue.value += 1
+            }
+            startState(ExerciseState.preActive)
+        }
+    }
+
+    private fun startSetsFinishedState() {
+        _stateText.value = "Complete!"
     }
 
     private fun updateStateText() {
@@ -448,22 +457,21 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
-    fun loadVideoUrlIfNeeded() {
+    fun loadMediaUrlsIfNeeded() {
         val media =
             currentExerciseEntry.value?.exerciseMedia?.firstOrNull { it.kind == "video" } ?: return
         val videoPath = media.path ?: return
         val thumbPath = media.thumbnailPath ?: return
 
         viewModelScope.launch {
-            val thumbCached = FirebaseStorageUrlCache.get(thumbPath)
-            thumbnailUrl.value = thumbCached ?: getFirebaseDownloadUrl(thumbPath)?.also {
-                FirebaseStorageUrlCache.set(thumbPath, it)
-            }
+            thumbnailUrl.value = loadCachedOrDownloadUrl(thumbPath)
+            videoUrl.value = loadCachedOrDownloadUrl(videoPath)
+        }
+    }
 
-            val videoCached = FirebaseStorageUrlCache.get(videoPath)
-            videoUrl.value = videoCached ?: getFirebaseDownloadUrl(videoPath)?.also {
-                FirebaseStorageUrlCache.set(videoPath, it)
-            }
+    private suspend fun loadCachedOrDownloadUrl(path: String): Uri? {
+        return FirebaseStorageUrlCache.get(path) ?: getFirebaseDownloadUrl(path)?.also {
+            FirebaseStorageUrlCache.set(path, it)
         }
     }
 
@@ -477,7 +485,7 @@ class WorkoutDetailViewModel @Inject constructor(
     fun selectExercise(currentExercise: ExerciseEntry) =
         memberRepository.selectExercise(currentExercise)
 
-    fun saveFinishedSet() {
+    private fun saveFinishedSet() {
         val workout = _currentWorkout.value ?: return
         val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
         val currentSet = _currentSet.value
@@ -490,20 +498,18 @@ class WorkoutDetailViewModel @Inject constructor(
         updateExerciseFeedback(exerciseId, updatedFeedback)
     }
 
-    fun saveSkippedSet() {
+    private fun saveSkippedSet() {
         val workout = _currentWorkout.value ?: return
         val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
         val currentSet = _currentSet.value
-
         val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
         val updatedSkippedSets = feedback.skipedSets.toMutableSet()
         updatedSkippedSets.add(currentSet)
-
         val updatedFeedback = feedback.copy(skipedSets = updatedSkippedSets.toList())
         updateExerciseFeedback(exerciseId, updatedFeedback)
     }
 
-    fun saveSkippedExercise() {
+    private fun saveSkippedExercise() {
         val workout = _currentWorkout.value ?: return
         val entry = _currentExerciseEntry.value ?: return
         val exerciseId = entry.exerciseId ?: ""
@@ -512,13 +518,11 @@ class WorkoutDetailViewModel @Inject constructor(
         val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
         val skippedSets = feedback.skipedSets.toMutableSet()
 
-        if (!skippedSets.contains(currentSet)) {
+        if (!skippedSets.contains(currentSet))
             skippedSets.add(currentSet)
-        }
 
-        if (currentSet < entry.sets) {
+        if (currentSet < entry.sets)
             skippedSets.addAll((currentSet + 1)..entry.sets)
-        }
 
         val updatedFeedback = feedback.copy(skipedSets = skippedSets.toList())
         updateExerciseFeedback(exerciseId, updatedFeedback)
@@ -546,7 +550,6 @@ class WorkoutDetailViewModel @Inject constructor(
                 isPausedBtwnRep = isPausedBtwnRep.value,
                 counter = exerciseDuration
             )
-
             currentWorkout.value?.let { memberRepository.updateWorkout(it, updatedEntryInProgress) }
         }
     }
