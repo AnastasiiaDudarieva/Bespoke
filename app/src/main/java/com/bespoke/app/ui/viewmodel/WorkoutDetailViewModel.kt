@@ -156,8 +156,8 @@ class WorkoutDetailViewModel @Inject constructor(
         timerJob?.cancel()
         countdownJob?.cancel()
         if (_currentSet.value < current.sets) {
-            _currentSet.value += 1
             saveSkippedSet()
+            _currentSet.value += 1
             startState(ExerciseState.setsStart)
         } else if (currentIndex + 1 < allExercises.size) {
             _exerciseState.value = ExerciseState.setsFinished
@@ -487,7 +487,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun saveFinishedSet() {
         val workout = _currentWorkout.value ?: return
-        val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
+        val exerciseId = _currentExerciseEntry.value?.id ?: return
         val currentSet = _currentSet.value
 
         val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
@@ -500,7 +500,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun saveSkippedSet() {
         val workout = _currentWorkout.value ?: return
-        val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
+        val exerciseId = _currentExerciseEntry.value?.id ?: return
         val currentSet = _currentSet.value
         val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
         val updatedSkippedSets = feedback.skipedSets.toMutableSet()
@@ -512,7 +512,7 @@ class WorkoutDetailViewModel @Inject constructor(
     private fun saveSkippedExercise() {
         val workout = _currentWorkout.value ?: return
         val entry = _currentExerciseEntry.value ?: return
-        val exerciseId = entry.exerciseId ?: ""
+        val exerciseId = entry.id ?: ""
         val currentSet = _currentSet.value
 
         val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
