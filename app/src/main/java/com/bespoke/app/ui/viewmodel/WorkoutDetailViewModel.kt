@@ -1,12 +1,14 @@
 package com.bespoke.app.ui.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.ExerciseEntryInProgress
 import com.bespoke.app.data.model.ExerciseFeedback
 import com.bespoke.app.data.model.ExerciseState
+import com.bespoke.app.data.model.Provider
 import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.model.isWorkoutComplete
 import com.bespoke.app.data.model.timePerRep
@@ -31,6 +33,7 @@ import kotlin.math.min
 class WorkoutDetailViewModel @Inject constructor(
     val memberRepository: MemberRepository,
 ) : ViewModel() {
+
 
     private val _currentWorkout = MutableStateFlow<Workout?>(null)
     private val currentWorkout: StateFlow<Workout?> = _currentWorkout
@@ -69,13 +72,13 @@ class WorkoutDetailViewModel @Inject constructor(
 
     var exerciseDuration = 0
     private var durationJob: Job? = null
-
-
     private var countdownJob: Job? = null
     private var timerJob: Job? = null
     private val preActiveSteps = 6
     private val pausePerRepMillis = 1500L
 
+    val _provider =  MutableStateFlow<Provider?>(null)
+    val provider: StateFlow<Provider?> = _provider
 
     val repCount: StateFlow<Int> = combine(
         counter,
@@ -249,7 +252,10 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun loadWorkout(workoutId: String) {
         val workout = memberRepository.getSelectedWorkout(workoutId)
+        Log.e("workout", "${workout}")
         _currentWorkout.value = workout
+
+        _provider.value = workout?._program?.providerId?.let { memberRepository.getProvider(it) }
 
         val inProgress = workout?.exerciseEntryInProgress
         _currentExerciseEntry.value = inProgress?.currentEntry

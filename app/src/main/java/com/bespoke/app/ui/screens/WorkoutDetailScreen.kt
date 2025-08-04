@@ -9,6 +9,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,12 +23,14 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.ChecklistRtl
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -56,6 +59,7 @@ import androidx.navigation.NavHostController
 import com.bespoke.app.R
 import com.bespoke.app.data.model.ExerciseState
 import com.bespoke.app.navigation.Screen
+import com.bespoke.app.ui.screens.components.base.CustomAvatar
 import com.bespoke.app.ui.screens.components.base.KeepScreenOn
 import com.bespoke.app.ui.screens.components.programs.workout.CenteredTextWithIcon
 import com.bespoke.app.ui.screens.components.programs.workout.SetsCounter
@@ -86,6 +90,7 @@ fun WorkoutDetailScreen(
     val currentSet by viewModel.currentSet.collectAsState()
     val isPaused by viewModel.isPaused.collectAsState()
     val stateText by viewModel.stateText.collectAsState()
+    val provider by viewModel.provider.collectAsState()
 
     val repCount = viewModel.repCount.collectAsState().value
     val elapsed = viewModel.elapsedSeconds.collectAsState().value
@@ -204,11 +209,32 @@ fun WorkoutDetailScreen(
                         )
                     }
                 }
-                currentExercise?.let {
+                if (currentExercise?.mediaList?.isNotEmpty() == true) {
+                    Spacer(Modifier.width(32.dp))
+                }
+                    currentExercise?.let {
                     SetsCounter(
                         currentSet = currentSet,
                         totalSets = it.sets
                     )
+                }
+                if (currentExercise?.mediaList?.isNotEmpty() == true) {
+                    provider?.let {
+                        CustomAvatar(
+                            url = it.avatar,
+                            size = 32.dp,
+                            firstName = it.firstName.orEmpty(),
+                            lastName = it.lastName.orEmpty(),
+                            modifier = Modifier
+                                .clickable {
+                                    currentExercise?.let {exercise->
+                                        viewModel.selectExercise(exercise)
+                                        navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
+                                    }
+                                }
+                        )
+                    }
+
                 }
 
                 IconButton(
@@ -428,6 +454,23 @@ fun WorkoutDetailScreen(
                             modifier = Modifier.size(28.dp)
                         )
                     }
+                    if (currentExercise?.mediaList?.isNotEmpty() == true) {
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 20.dp, y = 20.dp)
+                                .size(22.dp)
+                                .background(color = BespokeBlue, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AttachFile,
+                                contentDescription = "Attachment",
+                                modifier = Modifier.size(12.dp),
+                                tint = Color.White
+                            )
+                        }
+                    }
+
 
                     Text(
                         text = stringResource(R.string.review),

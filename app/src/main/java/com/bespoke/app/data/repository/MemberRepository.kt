@@ -10,6 +10,7 @@ import com.bespoke.app.data.model.MediaKind
 import com.bespoke.app.data.model.Member
 import com.bespoke.app.data.model.PastWorkout
 import com.bespoke.app.data.model.Program
+import com.bespoke.app.data.model.Provider
 import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.model.isWorkoutComplete
@@ -55,6 +56,9 @@ class MemberRepository @Inject constructor(
     private val _pastWorkouts = MutableStateFlow<List<PastWorkout>>(emptyList())
     val pastWorkouts: StateFlow<List<PastWorkout>> = _pastWorkouts
 
+    private val _providers = MutableStateFlow<List<Provider>>(emptyList())
+    val providers: StateFlow<List<Provider>> = _providers
+
     private var equipments: List<Equipment> = emptyList()
         private set
 
@@ -66,6 +70,7 @@ class MemberRepository @Inject constructor(
     private var memberListener: ListenerRegistration? = null
     private var programsListener: ListenerRegistration? = null
     private var workoutsListener: ListenerRegistration? = null
+    private var providersListener: ListenerRegistration? = null
 
     private var selectedProgram: Program? = null
     private var selectedExercise: ExerciseEntry? = null
@@ -78,6 +83,7 @@ class MemberRepository @Inject constructor(
             }
         }
         loadEquipments()
+        listenToProviders()
     }
 
     fun currentUserId() = auth.currentUserId()
@@ -107,7 +113,7 @@ class MemberRepository @Inject constructor(
     private fun loadEquipments() {
         if (equipments.isNotEmpty())
             return
-        FirebaseFirestore.getInstance()
+        firestore
             .collection("equipments")
             .get()
             .addOnSuccessListener { snapshot ->
@@ -120,6 +126,22 @@ class MemberRepository @Inject constructor(
             }
     }
 
+    private fun listenToProviders() {
+        providersListener = firestore.collection("providers")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("Firestore", "Error listening to providers", error)
+                    return@addSnapshotListener
+                }
+                val providerList = snapshot?.documents?.mapNotNull { doc ->
+                    Log.e("doc", "${doc}")
+                    doc.toObject(Provider::class.java)
+
+                } ?: emptyList()
+
+                _providers.value = providerList
+            }
+    }
     fun getEquipmentLabelById(id: String): String? {
         return equipments.firstOrNull { it.id == id }?.label
     }
@@ -132,6 +154,7 @@ class MemberRepository @Inject constructor(
         stopListeningForMemberChanges()
         stopListeningForPrograms()
         stopListeningForWorkouts()
+        stopListeningForProviders()
         auth.logout()
         clearMember()
     }
@@ -221,6 +244,12 @@ class MemberRepository @Inject constructor(
         workoutsListener?.remove()
         workoutsListener = null
         _workouts.value = emptyList()
+    }
+
+    private fun stopListeningForProviders() {
+        providersListener?.remove()
+        providersListener = null
+        _providers.value = emptyList()
     }
 
     private fun Bitmap.toJpegByteArray(quality: Int = 100): ByteArray? {
@@ -395,6 +424,10 @@ class MemberRepository @Inject constructor(
         return workouts.value.firstOrNull { it.id == workoutId }
     }
 
+    fun getProvider(providerId: String): Provider? {
+       return providers.value.firstOrNull { it.id == providerId }
+    }
+
     suspend fun startWorkout(program: Program): Workout {
         val firstEntry = program.sections.firstOrNull()?.entries?.firstOrNull()
             ?: throw IllegalStateException("Program has no entries")
@@ -457,7 +490,7 @@ class MemberRepository @Inject constructor(
             caloriesBurned = (sessionTimeSecs / 60.0) * 10
             effort = 0.5
         }
-        updatedWorkout = workout.copy(
+        updatedWorkout = updatedWorkout.copy(
             completedAt = completedAt,
             sessionTimeSecs = sessionTimeSecs,
             caloriesBurned = caloriesBurned,
