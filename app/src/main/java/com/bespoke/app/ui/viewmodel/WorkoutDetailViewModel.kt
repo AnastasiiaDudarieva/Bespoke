@@ -36,7 +36,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
 
     private val _currentWorkout = MutableStateFlow<Workout?>(null)
-    private val currentWorkout: StateFlow<Workout?> = _currentWorkout
+    val currentWorkout: StateFlow<Workout?> = _currentWorkout
 
     private val _currentExerciseEntry = MutableStateFlow<ExerciseEntry?>(null)
     val currentExerciseEntry: StateFlow<ExerciseEntry?> = _currentExerciseEntry

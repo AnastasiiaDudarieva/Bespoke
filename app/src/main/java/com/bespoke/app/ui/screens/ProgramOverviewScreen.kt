@@ -71,21 +71,13 @@ fun ProgramOverviewScreen(
     navController: NavHostController,
     viewModel: ProgramOverviewViewModel = hiltViewModel(),
 ) {
-
-    val programs by viewModel.programs.collectAsState()
-    val loadedProgram = programs.find { it.id == programId }
-
-    val programState by viewModel.program.collectAsState()
+    val program by viewModel.program.collectAsState()
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(loadedProgram) {
-        if (loadedProgram != null) {
-            viewModel.loadProgramData(loadedProgram)
-        }
+    LaunchedEffect(programId) {
+        viewModel.loadProgramData(programId)
     }
 
-    val program = programState ?: return
     val scrollState = rememberLazyListState()
 
     val showCollapsedHeader by remember {
@@ -112,7 +104,7 @@ fun ProgramOverviewScreen(
                         .fillMaxWidth()
                         .height(390.dp)
                 ) {
-                    program.thumbnail?.let {
+                    program?.thumbnail?.let {
                         FirebaseStorageImageView(
                             gsPath = it,
                             cornerRadius = 0
@@ -142,14 +134,14 @@ fun ProgramOverviewScreen(
                                 )
                         ) {
                             Text(
-                                "${program.lengthDisplay()} MIN",
+                                "${program?.lengthDisplay()} MIN",
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 lineHeight = 48.sp,
-                                text = program.title ?: "",
+                                text = program?.title.orEmpty(),
                                 fontSize = 40.sp,
                                 color = Color.White,
                                 maxLines = 4,
@@ -184,14 +176,14 @@ fun ProgramOverviewScreen(
                             .size(96.dp)
                             .background(BespokeBlue, CircleShape)
                     ) {
-                        if(isLoading){
+                        if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier
                                     .size(24.dp),
                                 strokeWidth = 2.dp,
                                 color = Color.White
                             )
-                        }else {
+                        } else {
                             Icon(
                                 Icons.Default.PlayArrow,
                                 contentDescription = "Play",
@@ -211,22 +203,23 @@ fun ProgramOverviewScreen(
                     modifier = Modifier.padding(bottom = 24.dp, start = 24.dp, end = 24.dp)
                 )
             }
+            program?.let { program ->
+                item {
+                    EquipmentNeeded(program = program, viewModel)
+                }
 
-            item {
-                EquipmentNeeded(program = program, viewModel)
-            }
-
-            itemsIndexed(program.sections) { index, section ->
-                ProgramSectionBlock(
-                    section = section,
-                    index = index + 1,
-                    viewModel = viewModel,
-                    onExerciseClick = { exercise ->
-                        navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
+                itemsIndexed(program.sections) { index, section ->
+                    ProgramSectionBlock(
+                        section = section,
+                        index = index + 1,
+                        viewModel = viewModel,
+                        onExerciseClick = { exercise ->
+                            navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
+                        }
+                    )
+                    if (index < program.sections.lastIndex) {
+                        HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
                     }
-                )
-                if (index < program.sections.lastIndex) {
-                    HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
                 }
             }
 
@@ -272,7 +265,7 @@ fun ProgramOverviewScreen(
                     if (show) {
                         Column {
                             BespokeTopBar(
-                                title = program.title ?: "",
+                                title = program?.title.orEmpty(),
                                 canNavigateBack = true,
                                 onBackClick = { navController.navigateUp() }
                             )

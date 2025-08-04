@@ -1,6 +1,7 @@
 package com.bespoke.app.ui.screens
 
 import SetStatusBarIconsDark
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -85,6 +86,7 @@ fun WorkoutDetailScreen(
     val context = LocalContext.current
     val audioPlayer = remember { AudioPlayer(context) }
 
+    val workout by viewModel.currentWorkout.collectAsState()
     val exerciseState by viewModel.exerciseState.collectAsState()
     val currentExercise by viewModel.currentExerciseEntry.collectAsState()
     val currentSet by viewModel.currentSet.collectAsState()
@@ -212,7 +214,7 @@ fun WorkoutDetailScreen(
                 if (currentExercise?.mediaList?.isNotEmpty() == true) {
                     Spacer(Modifier.width(32.dp))
                 }
-                    currentExercise?.let {
+                currentExercise?.let {
                     SetsCounter(
                         currentSet = currentSet,
                         totalSets = it.sets
@@ -227,7 +229,7 @@ fun WorkoutDetailScreen(
                             lastName = it.lastName.orEmpty(),
                             modifier = Modifier
                                 .clickable {
-                                    currentExercise?.let {exercise->
+                                    currentExercise?.let { exercise ->
                                         viewModel.selectExercise(exercise)
                                         navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
                                     }
@@ -238,7 +240,11 @@ fun WorkoutDetailScreen(
                 }
 
                 IconButton(
-                    onClick = { /* TODO: Show list of all exercises  */ },
+                    onClick = {
+                        workout?.programId.let {id->
+                            navController.navigate("${Screen.PROGRAM_OVERVIEW_SIMPLE}?programId=${id}")
+                        }
+                    },
                 ) {
                     Box(
                         modifier = Modifier

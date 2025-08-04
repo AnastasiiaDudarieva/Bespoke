@@ -337,9 +337,12 @@ class MemberRepository @Inject constructor(
             if (it.id == program.id)
                 return it
         }
+        Log.e("loadExerciseData program", "${program}")
         val exerciseIds = program.sections.flatMap { section ->
             section.entries.orEmpty().mapNotNull { it.exerciseId }
         }.toSet()
+        Log.e("loadExerciseData exerciseIds", "${exerciseIds}")
+
 
         val idToData = mutableMapOf<String, Pair<String?, List<Media>?>>()
 

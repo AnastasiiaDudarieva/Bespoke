@@ -9,6 +9,7 @@ object Screen {
     const val WEB_VIEW = "webView"
     const val PROGRAMS = "programs"
     const val PROGRAM_OVERVIEW = "program_overview"
+    const val PROGRAM_OVERVIEW_SIMPLE = "program_overview_simple"
     const val EXERCISE = "exercise"
     const val WORKOUT = "workout"
 

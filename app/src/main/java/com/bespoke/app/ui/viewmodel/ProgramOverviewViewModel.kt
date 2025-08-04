@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.model.Equipment
@@ -20,41 +21,49 @@ class ProgramOverviewViewModel @Inject constructor(
     private val memberRepository: MemberRepository,
 ) : ViewModel() {
 
-    val programs = memberRepository.programs
+
     private val _program = MutableStateFlow<Program?>(null)
     val program: StateFlow<Program?> = _program
 
     fun getEquipmentLabelById(id: String) = memberRepository.getEquipmentLabelById(id)
 
-    fun loadProgramData(program: Program) {
-        viewModelScope.launch {
-            val updatedProgram = memberRepository.loadExerciseData(program)
-            _program.value = updatedProgram
+    fun loadProgramData(programId: String) {
+        Log.e("programId", "${programId}")
+        val loadedProgram = memberRepository.programs.value.firstOrNull { it.id == programId }
+        memberRepository.programs.value.forEach {
+            Log.e("loadedProgram", "${it.id}")
         }
-    }
-
-    fun parameterListString(entry: ExerciseEntry): String {
-        entry.apply {
-            var label = ""
-            when (basedType) {
-                "Reps" -> label = "$sets Sets  •  $reps Reps"
-                "Time" -> label = "$time Sec"
-                "Time & Reps" -> label = "$time Sec  •  $sets Sets  •  $reps Reps"
+        loadedProgram?.let {
+            viewModelScope.launch {
+                val updatedProgram = memberRepository.loadExerciseData(it)
+                _program.value = updatedProgram
             }
-
-            val hasWeights = equipmentIds?.any { it in Equipment.weightEquipmentIds }
-            if (hasWeights == true)
-                label += "  •  $weight lbs"
-
-            return label
         }
     }
 
-    suspend fun startWorkout() = _program.value?.let { memberRepository.startWorkout(it) }
+        fun parameterListString(entry: ExerciseEntry): String {
+            entry.apply {
+                var label = ""
+                when (basedType) {
+                    "Reps" -> label = "$sets Sets  •  $reps Reps"
+                    "Time" -> label = "$time Sec"
+                    "Time & Reps" -> label = "$time Sec  •  $sets Sets  •  $reps Reps"
+                }
+
+                val hasWeights = equipmentIds?.any { it in Equipment.weightEquipmentIds }
+                if (hasWeights == true)
+                    label += "  •  $weight lbs"
+
+                return label
+            }
+        }
+
+        suspend fun startWorkout() = _program.value?.let { memberRepository.startWorkout(it) }
 
 
-    suspend fun resolveFirebaseUrl(path: String): String {
-        return Firebase.storage.getReference(path).downloadUrl.await().toString()
+        suspend fun resolveFirebaseUrl(path: String): String {
+            return Firebase.storage.getReference(path).downloadUrl.await().toString()
+        }
+
+        fun selectExercise(exercise: ExerciseEntry) = memberRepository.selectExercise(exercise)
     }
-    fun selectExercise(exercise: ExerciseEntry) = memberRepository.selectExercise(exercise)
-}
