@@ -1,5 +1,6 @@
 package com.bespoke.app.data.repository
 
+import android.util.Log
 import com.bespoke.app.data.rest.BaseResponse
 import com.bespoke.app.data.rest.ErrorResponse
 import com.google.gson.Gson
@@ -44,7 +45,7 @@ open class BaseRepository {
             false,
             null,
             null,
-            error?.error
+            error?.message
         )
     }
 }

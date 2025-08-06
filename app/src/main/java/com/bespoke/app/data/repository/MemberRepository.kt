@@ -337,12 +337,9 @@ class MemberRepository @Inject constructor(
             if (it.id == program.id)
                 return it
         }
-        Log.e("loadExerciseData program", "${program}")
         val exerciseIds = program.sections.flatMap { section ->
             section.entries.orEmpty().mapNotNull { it.exerciseId }
         }.toSet()
-        Log.e("loadExerciseData exerciseIds", "${exerciseIds}")
-
 
         val idToData = mutableMapOf<String, Pair<String?, List<Media>?>>()
 
@@ -508,5 +505,20 @@ class MemberRepository @Inject constructor(
         }
     }
 
+
+    suspend fun updateMemberFields(fields: Map<String, Any?>) {
+        val currentUser = auth.currentUserId() ?: return
+        val memberRef = firestore.collection("members").document(currentUser)
+
+        try {
+            memberRef.update(fields).await()
+            val updatedSnapshot = memberRef.get().await()
+            Log.e("updatedSnapshot", "${updatedSnapshot}")
+            val updatedMember = updatedSnapshot.toObject(Member::class.java)
+            _member.emit(updatedMember)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
 }

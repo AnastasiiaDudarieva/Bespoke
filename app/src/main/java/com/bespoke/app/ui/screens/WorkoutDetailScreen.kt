@@ -1,7 +1,6 @@
 package com.bespoke.app.ui.screens
 
 import SetStatusBarIconsDark
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -27,6 +26,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -58,8 +58,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bespoke.app.R
+import com.bespoke.app.data.model.ExerciseEntry
 import com.bespoke.app.data.model.ExerciseState
+import com.bespoke.app.data.model.Provider
 import com.bespoke.app.navigation.Screen
+import com.bespoke.app.ui.screens.components.base.CircleIconButton
 import com.bespoke.app.ui.screens.components.base.CustomAvatar
 import com.bespoke.app.ui.screens.components.base.KeepScreenOn
 import com.bespoke.app.ui.screens.components.programs.workout.CenteredTextWithIcon
@@ -83,8 +86,11 @@ fun WorkoutDetailScreen(
 ) {
     SetStatusBarIconsDark(darkIcons = false)
     KeepScreenOn()
+
     val context = LocalContext.current
     val audioPlayer = remember { AudioPlayer(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
 
     val workout by viewModel.currentWorkout.collectAsState()
     val exerciseState by viewModel.exerciseState.collectAsState()
@@ -93,47 +99,17 @@ fun WorkoutDetailScreen(
     val isPaused by viewModel.isPaused.collectAsState()
     val stateText by viewModel.stateText.collectAsState()
     val provider by viewModel.provider.collectAsState()
-
-    val repCount = viewModel.repCount.collectAsState().value
-    val elapsed = viewModel.elapsedSeconds.collectAsState().value
-    val coroutineScope = rememberCoroutineScope()
-
-    val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { 2 }
-    )
+    val repCount by viewModel.repCount.collectAsState()
+    val elapsed by viewModel.elapsedSeconds.collectAsState()
 
     LaunchedEffect(stateText, repCount) {
-        if (isPaused)
-            return@LaunchedEffect
-        when (stateText) {
-            "Get Ready!" -> audioPlayer.play(R.raw.get_ready)
-            "Go" -> audioPlayer.play(R.raw.start)
-            "Complete!" -> audioPlayer.play(R.raw.end)
-            else -> {}
-        }
-        if (repCount > 0)
-            audioPlayer.play(R.raw.bip)
+        if (!isPaused) playAudioCues(audioPlayer, stateText, repCount)
     }
-
     LaunchedEffect(exerciseState) {
-        if (isPaused)
-            return@LaunchedEffect
-        when (exerciseState) {
-            ExerciseState.rest -> audioPlayer.play(R.raw.recover)
-            ExerciseState.active -> audioPlayer.play(R.raw.bip)
-            else -> {}
-        }
+        if (!isPaused) playStateAudio(audioPlayer, exerciseState)
     }
-
-
-    LaunchedEffect(workoutId) {
-        viewModel.loadWorkout(workoutId)
-    }
-
-    LaunchedEffect(currentExercise) {
-        viewModel.loadMediaUrlsIfNeeded()
-    }
+    LaunchedEffect(workoutId) { viewModel.loadWorkout(workoutId) }
+    LaunchedEffect(currentExercise) { viewModel.loadMediaUrlsIfNeeded() }
 
     Column(
         modifier = Modifier
@@ -141,129 +117,31 @@ fun WorkoutDetailScreen(
             .background(Color.Black)
     ) {
         Box(modifier = Modifier.weight(0.8f)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                HorizontalPager(
-                    state = pagerState,
-                    beyondViewportPageCount = 2,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    when (page) {
-                        0 -> VideoPage(viewModel = viewModel)
+            WorkoutPager(pagerState, viewModel)
 
-                        1 -> TimerPage(viewModel = viewModel)
+            WorkoutTopBar(
+                currentExercise = currentExercise,
+                currentSet = currentSet,
+                provider = provider,
+                onClose = {
+                    coroutineScope.launch {
+                        if (!isPaused) viewModel.togglePause()
+                        viewModel.updateWorkout()
+                        navController.navigateUp()
+                    }
+                },
+                onAvatarClick = {
+                    currentExercise?.let {
+                        viewModel.selectExercise(it)
+                        navController.navigate("${Screen.EXERCISE}?exerciseId=${it.id}")
+                    }
+                },
+                onMoreClick = {
+                    workout?.programId?.let { id ->
+                        navController.navigate("${Screen.PROGRAM_OVERVIEW_SIMPLE}?programId=$id")
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(2) { index ->
-                        val color = if (pagerState.currentPage == index)
-                            Color.White else Color(0xFFB0B0B0)
-
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(6.dp)
-                                .background(color = color, shape = MaterialTheme.shapes.small)
-                        )
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            if (!isPaused)
-                                viewModel.togglePause()
-                            viewModel.updateWorkout()
-                            navController.navigateUp()
-                        }
-                    }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(iconSize)
-                            .background(
-                                Color.White,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-
-                    ) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
-                }
-                if (currentExercise?.mediaList?.isNotEmpty() == true) {
-                    Spacer(Modifier.width(32.dp))
-                }
-                currentExercise?.let {
-                    SetsCounter(
-                        currentSet = currentSet,
-                        totalSets = it.sets
-                    )
-                }
-                if (currentExercise?.mediaList?.isNotEmpty() == true) {
-                    provider?.let {
-                        CustomAvatar(
-                            url = it.avatar,
-                            size = 32.dp,
-                            firstName = it.firstName.orEmpty(),
-                            lastName = it.lastName.orEmpty(),
-                            modifier = Modifier
-                                .clickable {
-                                    currentExercise?.let { exercise ->
-                                        viewModel.selectExercise(exercise)
-                                        navController.navigate("${Screen.EXERCISE}?exerciseId=${exercise.id}")
-                                    }
-                                }
-                        )
-                    }
-
-                }
-
-                IconButton(
-                    onClick = {
-                        workout?.programId.let {id->
-                            navController.navigate("${Screen.PROGRAM_OVERVIEW_SIMPLE}?programId=${id}")
-                        }
-                    },
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(iconSize)
-                            .background(
-                                Color.White,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreHoriz,
-                            contentDescription = "More",
-                            tint = Color.Black
-                        )
-                    }
-                }
-            }
+            )
 
             Column(
                 modifier = Modifier
@@ -301,121 +179,15 @@ fun WorkoutDetailScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
             currentExercise?.let { exercise ->
-                Column(
+                ExerciseInfo(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-
-                        CenteredTextWithIcon(
-                            text = exercise.name ?: "Exercise",
-                            onNext = { viewModel.toNextExercise() })
-                    }
-
-
-                    when (exerciseState) {
-                        ExerciseState.setsStart, ExerciseState.preActive, ExerciseState.setsFinished -> {
-                            Text(
-                                text = when (exercise.basedType) {
-                                    "Reps" -> "${exercise.reps} Reps" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
-                                    "Time" -> "${exercise.time} Sec" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
-                                    "Time & Reps" -> "${exercise.time} Sec • ${exercise.reps} Reps" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
-                                    else -> ""
-                                },
-                                fontSize = 24.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center,
-                                fontFamily = BeatriceFontFamily
-                            )
-
-                        }
-
-                        ExerciseState.active -> {
-                            when (exercise.basedType) {
-                                "Time" -> {
-                                    val remainingTime = exercise.time - elapsed
-                                    val clampedTime = if (remainingTime < 0) 0 else remainingTime
-                                    val minutes = clampedTime / 60
-                                    val seconds = clampedTime % 60
-                                    val timeString = String.format("%01d:%02d", minutes, seconds)
-
-                                    Text(
-                                        text = timeString,
-                                        fontSize = 24.sp,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center,
-                                        fontFamily = BeatriceFontFamily
-                                    )
-                                }
-
-                                "Reps" -> {
-                                    val repText = String.format("%02d", repCount) +
-                                            if (exercise.hasWeights) " • ${exercise.weight} kg" else ""
-
-                                    Text(
-                                        text = repText,
-                                        fontSize = 24.sp,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center,
-                                        fontFamily = BeatriceFontFamily
-                                    )
-                                }
-
-                                "Time & Reps" -> {
-                                    val remainingTime = exercise.time - elapsed
-                                    val clampedTime = if (remainingTime < 0) 0 else remainingTime
-                                    val minutes = clampedTime / 60
-                                    val seconds = clampedTime % 60
-                                    val timeString = String.format("%01d:%02d", minutes, seconds)
-
-                                    val repString = "${exercise.reps} Reps" +
-                                            if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
-
-                                    Text(
-                                        text = "$timeString • $repString",
-                                        fontSize = 24.sp,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center,
-                                        fontFamily = BeatriceFontFamily
-                                    )
-                                }
-
-                                else -> Unit
-                            }
-                        }
-
-                        ExerciseState.rest, ExerciseState.preRest -> {
-                            val remainingRest = exercise.rest - elapsed
-                            val clampedRest = if (remainingRest < 0) 0 else remainingRest
-                            val min = clampedRest / 60
-                            val sec = clampedRest % 60
-                            val restString = String.format("%01d:%02d", min, sec)
-
-                            Text(
-                                text = restString,
-                                fontSize = 24.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center,
-                                fontFamily = BeatriceFontFamily
-                            )
-                        }
-
-
-                    }
-                    Spacer(modifier = Modifier.height(iconSize))
-                }
+                    exercise, exerciseState, elapsed, repCount, viewModel
+                )
             }
-
-
         }
-
 
 
         Column(
@@ -556,3 +328,165 @@ fun WorkoutDetailScreen(
     }
 }
 
+
+@Composable
+private fun WorkoutPager(pagerState: PagerState, viewModel: WorkoutDetailViewModel) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            beyondViewportPageCount = 2,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> VideoPage(viewModel = viewModel)
+
+                1 -> TimerPage(viewModel = viewModel)
+            }
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(2) { index ->
+                val color = if (pagerState.currentPage == index)
+                    Color.White else Color(0xFFB0B0B0)
+
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .size(6.dp)
+                        .background(color = color, shape = MaterialTheme.shapes.small)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkoutTopBar(
+    currentExercise: ExerciseEntry?,
+    currentSet: Int,
+    provider: Provider?,
+    onClose: () -> Unit,
+    onAvatarClick: () -> Unit,
+    onMoreClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CircleIconButton(icon = Icons.Filled.Close, contentDescription = "Back", onClick = onClose)
+        if (currentExercise?.mediaList?.isNotEmpty() == true) {
+            Spacer(Modifier.width(32.dp))
+        }
+        currentExercise?.let {
+            SetsCounter(currentSet = currentSet, totalSets = it.sets)
+        }
+        if (currentExercise?.mediaList?.isNotEmpty() == true) {
+            provider?.let {
+                CustomAvatar(
+                    url = it.avatar,
+                    size = 32.dp,
+                    firstName = it.firstName.orEmpty(),
+                    lastName = it.lastName.orEmpty(),
+                    modifier = Modifier.clickable(onClick = onAvatarClick)
+                )
+            }
+        }
+
+        CircleIconButton(
+            icon = Icons.Filled.MoreHoriz,
+            contentDescription = "Program Overview",
+            onClick = onMoreClick
+        )
+    }
+}
+
+
+@Composable
+private fun ExerciseInfo(
+    modifier: Modifier,
+    exercise: ExerciseEntry,
+    exerciseState: ExerciseState,
+    elapsed: Int,
+    repCount: Int,
+    viewModel: WorkoutDetailViewModel,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CenteredTextWithIcon(
+            text = exercise.name ?: "Exercise",
+            onNext = { viewModel.toNextExercise() }
+        )
+        Text(
+            text = getExerciseInfoText(exercise, exerciseState, elapsed, repCount),
+            fontSize = 24.sp,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            fontFamily = BeatriceFontFamily
+        )
+        Spacer(modifier = Modifier.height(iconSize))
+    }
+}
+
+
+private fun playAudioCues(audioPlayer: AudioPlayer, stateText: String, repCount: Int) {
+    when (stateText) {
+        "Get Ready!" -> audioPlayer.play(R.raw.get_ready)
+        "Go" -> audioPlayer.play(R.raw.start)
+        "Complete!" -> audioPlayer.play(R.raw.end)
+    }
+    if (repCount > 0) audioPlayer.play(R.raw.bip)
+}
+
+private fun playStateAudio(audioPlayer: AudioPlayer, state: ExerciseState) {
+    when (state) {
+        ExerciseState.rest -> audioPlayer.play(R.raw.recover)
+        ExerciseState.active -> audioPlayer.play(R.raw.bip)
+        else -> {}
+    }
+}
+
+private fun getExerciseInfoText(
+    exercise: ExerciseEntry,
+    state: ExerciseState,
+    elapsed: Int,
+    repCount: Int,
+): String {
+    return when (state) {
+        ExerciseState.active -> when (exercise.basedType) {
+            "Time" -> formatTime(exercise.time - elapsed)
+            "Reps" -> String.format("%02d", repCount) +
+                    if (exercise.hasWeights) " • ${exercise.weight} kg" else ""
+
+            "Time & Reps" -> "${formatTime(exercise.time - elapsed)} • ${exercise.reps} Reps" +
+                    if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
+
+            else -> ""
+        }
+
+        ExerciseState.rest, ExerciseState.preRest -> formatTime(exercise.rest - elapsed)
+        ExerciseState.setsStart, ExerciseState.preActive, ExerciseState.setsFinished -> when (exercise.basedType) {
+            "Reps" -> "${exercise.reps} Reps" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
+            "Time" -> "${exercise.time} Sec" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
+            "Time & Reps" -> "${exercise.time} Sec • ${exercise.reps} Reps" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
+            else -> ""
+        }
+    }
+}
+
+private fun formatTime(seconds: Int): String {
+    val clamped = seconds.coerceAtLeast(0)
+    return String.format("%01d:%02d", clamped / 60, clamped % 60)
+}

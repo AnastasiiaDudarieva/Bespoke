@@ -57,7 +57,7 @@ class HomeViewModel @Inject constructor(
                 val newAvatarUrl = memberRepository.uploadProfileImage(image)
                 if (newAvatarUrl != null) {
                     imageBitmapCache[newAvatarUrl] = image
-                    memberRepository.updateMemberAvatar(newAvatarUrl)
+                    memberRepository.updateMemberFields(mapOf("avatar" to newAvatarUrl))
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

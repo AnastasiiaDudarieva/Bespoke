@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bespoke.app.data.repository.FirebaseRepository
@@ -98,7 +99,7 @@ class EditMemberProfileViewModel @Inject constructor(
                 val member = memberRepository.member.value ?: return@launch
                 val response = firebaseRepository.updateUserProfile(
                     currentEmail = member.email.orEmpty(),
-                    newEmail = data.email,
+                    newEmail = data.email.lowercase(),
                     newPhoneNumber = data.phone,
                     firstName = data.firstName,
                     lastName = data.lastName,
@@ -107,14 +108,14 @@ class EditMemberProfileViewModel @Inject constructor(
                     dob = data.selectedDob?.timeInMillis?.div(1000)?.toInt() ?: 0
                 )
 
-                _uiState.value = if (response.status) {
+                _uiState.value = if (response.first) {
                     _uiState.value.copy(
                         isLoading = false,
                         isUpdated = true,
-                        message = response.message
+                        message = response.second
                     )
                 } else {
-                    _uiState.value.copy(isLoading = false, error = "Update failed")
+                    _uiState.value.copy(isLoading = false, error = response.second?:"Update failed")
                 }
 
             } catch (e: Exception) {

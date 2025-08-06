@@ -18,5 +18,5 @@ interface FirebaseService {
     @POST("/updateUser")
     suspend fun updateUser(
         @Body request: UpdateEmailRequest
-    ): Response<BaseResponse<UpdateEmailResponse?, Any?>>
+    ): Response<UpdateEmailResponse>
 }
