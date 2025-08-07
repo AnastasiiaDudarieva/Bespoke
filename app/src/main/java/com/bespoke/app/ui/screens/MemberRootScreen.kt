@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -94,9 +95,9 @@ fun MemberRootScreen(
         ) {
             when (currentTab) {
                 is TabItem.Home -> HomeScreen(navController)
-                is TabItem.Schedule -> Text("Schedule")
-                is TabItem.Programs -> navController.navigate(Screen.PROGRAMS)
-                is TabItem.Guidance -> Text("Guidance")
+                is TabItem.Schedule -> Text(modifier = Modifier.fillMaxSize(),text = "Schedule", textAlign = TextAlign.Center)
+                is TabItem.Programs -> ProgramsScreen(navController)
+                is TabItem.Guidance -> Text(modifier = Modifier.fillMaxSize(), text = "Guidance", textAlign = TextAlign.Center)
             }
         }
     }
