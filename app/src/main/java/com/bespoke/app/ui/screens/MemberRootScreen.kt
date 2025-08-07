@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
@@ -41,23 +43,23 @@ sealed class TabItem(val label: String, @DrawableRes val iconRes: Int) {
 
 @Composable
 fun MemberRootScreen(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController
 ) {
     SetStatusBarIconsDark(darkIcons = true)
 
-    var currentTab: TabItem by remember { mutableStateOf(TabItem.Home) }
+    val tabNavController = rememberNavController()
+    val currentTabBackstack by tabNavController.currentBackStackEntryAsState()
+    val currentTabDestination = currentTabBackstack?.destination?.route
 
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = currentBackStackEntry?.destination?.route
+    var currentTab by remember { mutableStateOf<TabItem>(TabItem.Home) }
 
-    LaunchedEffect(currentDestination) {
-        currentTab = when {
-            currentDestination?.startsWith(Screen.PROGRAMS) == true ||
-                    currentDestination?.startsWith(Screen.PROGRAM_OVERVIEW) == true ||
-                    currentDestination?.startsWith(Screen.WORKOUT) == true -> TabItem.Programs
-
-            currentDestination?.startsWith(Screen.PROFILE) == true -> TabItem.Home
-
+    // визначаємо активний таб на основі внутрішнього tabNavController
+    LaunchedEffect(currentTabDestination) {
+        currentTab = when (currentTabDestination) {
+            Screen.HOME -> TabItem.Home
+            Screen.SCHEDULE -> TabItem.Schedule
+            Screen.PROGRAMS -> TabItem.Programs
+            Screen.GUIDANCE -> TabItem.Guidance
             else -> currentTab
         }
     }
@@ -65,26 +67,22 @@ fun MemberRootScreen(
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = NavBarBackgroundColor) {
-                listOf(
-                    TabItem.Home,
-                    TabItem.Schedule,
-                    TabItem.Programs,
-                    TabItem.Guidance
-                ).forEach { tab ->
+                listOf(TabItem.Home, TabItem.Schedule, TabItem.Programs, TabItem.Guidance).forEach { tab ->
                     NavigationBarItem(
                         selected = currentTab == tab,
                         onClick = {
                             currentTab = tab
-                            when (tab) {
-                                TabItem.Home -> navController.navigate(Screen.MEMBER_ROOT) {
-                                    popUpTo(Screen.MEMBER_ROOT) { inclusive = true }
-                                    launchSingleTop = true
+                            tabNavController.navigate(
+                                when (tab) {
+                                    TabItem.Home -> Screen.HOME
+                                    TabItem.Schedule -> Screen.SCHEDULE
+                                    TabItem.Programs -> Screen.PROGRAMS
+                                    TabItem.Guidance -> Screen.GUIDANCE
                                 }
-                                TabItem.Programs -> navController.navigate(Screen.PROGRAMS) {
-                                    popUpTo(Screen.MEMBER_ROOT) { inclusive = false }
-                                    launchSingleTop = true
-                                }
-                                else -> { /* handle other tabs if needed */ }
+                            ) {
+                                launchSingleTop = true
+                                popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
+                                restoreState = true
                             }
                         },
                         icon = {
@@ -103,7 +101,7 @@ fun MemberRootScreen(
                                 fontSize = 10.sp
                             )
                         },
-                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                        colors = NavigationBarItemDefaults.colors(
                             indicatorColor = Color.Transparent
                         )
                     )
@@ -116,20 +114,28 @@ fun MemberRootScreen(
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            when (currentTab) {
-                is TabItem.Home -> HomeScreen(navController)
-                is TabItem.Schedule -> Text(
-                    modifier = Modifier.fillMaxSize(),
-                    text = "Schedule",
-                    textAlign = TextAlign.Center
-                )
-                is TabItem.Programs -> ProgramsScreen(navController)
-                is TabItem.Guidance -> Text(
-                    modifier = Modifier.fillMaxSize(),
-                    text = "Guidance",
-                    textAlign = TextAlign.Center
-                )
+            androidx.navigation.compose.NavHost(
+                navController = tabNavController,
+                startDestination = Screen.HOME
+            ) {
+                composable(Screen.HOME) { HomeScreen(navController) }
+                composable(Screen.SCHEDULE) {
+                    Text(
+                        modifier = Modifier.fillMaxSize(),
+                        text = "Schedule",
+                        textAlign = TextAlign.Center
+                    )
+                }
+                composable(Screen.PROGRAMS) { ProgramsScreen(navController) }
+                composable(Screen.GUIDANCE) {
+                    Text(
+                        modifier = Modifier.fillMaxSize(),
+                        text = "Guidance",
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
 }
+

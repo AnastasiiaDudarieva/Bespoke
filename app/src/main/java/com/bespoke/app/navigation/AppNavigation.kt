@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
@@ -23,78 +25,93 @@ import com.bespoke.app.ui.screens.components.programs.details.MemberWorkoutGuida
 import com.bespoke.app.ui.viewmodel.AuthViewModel
 
 
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
 
-    when(authState) {
+    when (authState) {
         is AuthState.Success -> {
-            androidx.navigation.compose.NavHost(
+            NavHost(
                 navController = navController,
                 startDestination = Screen.MEMBER_ROOT
             ) {
                 composable(Screen.MEMBER_ROOT) {
                     MemberRootScreen(navController = navController)
                 }
+
                 composable(Screen.PROFILE) {
-                    ProfileScreen( navController = navController)
+                    ProfileScreen(navController= navController)
                 }
                 composable(Screen.SETTINGS) {
-                    SettingsScreen( navController = navController)
+                    SettingsScreen(navController)
                 }
                 composable(Screen.ACCOUNT) {
-                    AccountScreen( navController = navController)
+                    AccountScreen(navController)
                 }
                 composable(Screen.EDIT_ACCOUNT) {
-                    EditMemberProfileScreen( navController = navController)
+                    EditMemberProfileScreen(navController)
                 }
-                composable(route = "${Screen.WEB_VIEW}?url={url}",
-                    arguments = listOf(
-                        navArgument("url") { defaultValue = ""; nullable = true }
-                    )
+                composable(
+                    route = "${Screen.WEB_VIEW}?url={url}",
+                    arguments = listOf(navArgument("url") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = ""
+                    })
                 ) { backStackEntry ->
                     val url = backStackEntry.arguments?.getString("url") ?: ""
                     WebViewScreen(url = url, navController = navController)
                 }
-                composable(Screen.PROGRAMS) {
-                    ProgramsScreen(navController = navController)
-                }
                 composable(
                     route = "${Screen.PROGRAM_OVERVIEW}?programId={programId}",
-                    arguments = listOf(navArgument("programId") { defaultValue = ""; nullable = false })
+                    arguments = listOf(navArgument("programId") {
+                        type = NavType.StringType
+                        nullable = false
+                    })
                 ) { backStackEntry ->
                     val programId = backStackEntry.arguments?.getString("programId") ?: ""
                     ProgramOverviewScreen(programId = programId, navController = navController)
                 }
                 composable(
                     route = "${Screen.PROGRAM_OVERVIEW_SIMPLE}?programId={programId}",
-                    arguments = listOf(navArgument("programId") { defaultValue = ""; nullable = false })
+                    arguments = listOf(navArgument("programId") {
+                        type = NavType.StringType
+                        nullable = false
+                    })
                 ) { backStackEntry ->
                     val programId = backStackEntry.arguments?.getString("programId") ?: ""
                     ProgramOverviewSimpleScreen(programId = programId, navController = navController)
                 }
                 composable(
                     route = "${Screen.EXERCISE}?exerciseId={exerciseId}",
-                    arguments = listOf(navArgument("exerciseId") { defaultValue = ""; nullable = false })
+                    arguments = listOf(navArgument("exerciseId") {
+                        type = NavType.StringType
+                        nullable = false
+                    })
                 ) { backStackEntry ->
                     val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
                     MemberWorkoutGuidanceScreen(currentExerciseEntryId = exerciseId, navController = navController)
                 }
-
                 composable(
                     route = "${Screen.WORKOUT}?workoutId={workoutId}",
-                    arguments = listOf(navArgument("workoutId") { defaultValue = ""; nullable = false })
+                    arguments = listOf(navArgument("workoutId") {
+                        type = NavType.StringType
+                        nullable = false
+                    })
                 ) { backStackEntry ->
                     val workoutId = backStackEntry.arguments?.getString("workoutId") ?: ""
                     WorkoutDetailScreen(workoutId = workoutId, navController = navController)
                 }
             }
         }
+
         else -> {
             WelcomeScreen()
         }
     }
 }
+
 
