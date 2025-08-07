@@ -22,7 +22,6 @@ fun ClickableUnderlinedText(
     Text(
         text = text,
         modifier = modifier
-            .fillMaxWidth()
             .clickable { onClick() },
         style = TextStyle(
             color = TextDark,

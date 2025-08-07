@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -56,7 +57,8 @@ fun BottomPanel(
                 Column(
                     modifier = Modifier
                         .padding(horizontal = 24.dp, vertical = 32.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BespokeButton(
                         onClick = { onChangeState(BottomPanelContent.Login) },
@@ -77,7 +79,8 @@ fun BottomPanel(
                     modifier = Modifier
                         .weight(1f, fill = true)
                         .padding(horizontal = 24.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(64.dp))
                     BespokeInput(
