@@ -15,6 +15,7 @@ object Screen {
     const val PROGRAM_OVERVIEW_SIMPLE = "program_overview_simple"
     const val EXERCISE = "exercise"
     const val WORKOUT = "workout"
+    const val WORKOUT_POST_SESSION = "workout_post_session"
 
 
     fun webViewWithUrl(url: String): String {

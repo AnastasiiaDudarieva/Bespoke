@@ -50,4 +50,6 @@
     <string name="equipment_needed">Equipment Needed</string>
     <string name="next">Next</string>
     <string name="review">Review</string>
+    <string name="session_complete">Session Complete</string>
+    <string name="amazing_work">Amazing Work!</string>
 </resources>

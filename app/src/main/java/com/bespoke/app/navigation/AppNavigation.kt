@@ -13,6 +13,7 @@ import com.bespoke.app.ui.models.auth.AuthState
 import com.bespoke.app.ui.screens.AccountScreen
 import com.bespoke.app.ui.screens.EditMemberProfileScreen
 import com.bespoke.app.ui.screens.MemberRootScreen
+import com.bespoke.app.ui.screens.MemberWorkoutPostSessionScreen
 import com.bespoke.app.ui.screens.ProfileScreen
 import com.bespoke.app.ui.screens.ProgramOverviewScreen
 import com.bespoke.app.ui.screens.ProgramOverviewSimpleScreen
@@ -105,6 +106,10 @@ fun AppNavigation() {
                     val workoutId = backStackEntry.arguments?.getString("workoutId") ?: ""
                     WorkoutDetailScreen(workoutId = workoutId, navController = navController)
                 }
+                composable(Screen.WORKOUT_POST_SESSION) {
+                    MemberWorkoutPostSessionScreen(navController)
+                }
+
             }
         }
 

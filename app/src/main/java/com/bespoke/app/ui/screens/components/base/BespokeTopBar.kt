@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.TextDark
@@ -25,7 +26,8 @@ fun BespokeTopBar(
     onBackClick: () -> Unit,
     title: String? = null,
     color: Color = TextDark,
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
+    icon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack
 ) {
     TopAppBar(
         title = {
@@ -47,7 +49,7 @@ fun BespokeTopBar(
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector =  Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = icon,
                         contentDescription = "Back",
                         tint = color
                     )

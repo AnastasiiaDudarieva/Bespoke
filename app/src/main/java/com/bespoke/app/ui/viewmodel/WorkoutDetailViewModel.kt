@@ -18,10 +18,13 @@ import com.bespoke.app.utils.getFirebaseDownloadUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -32,7 +35,6 @@ import javax.inject.Inject
 class WorkoutDetailViewModel @Inject constructor(
     val memberRepository: MemberRepository,
 ) : ViewModel() {
-
 
     private val _currentWorkout = MutableStateFlow<Workout?>(null)
     val currentWorkout: StateFlow<Workout?> = _currentWorkout
@@ -89,10 +91,11 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _provider = MutableStateFlow<Provider?>(null)
     val provider: StateFlow<Provider?> = _provider
 
+    private val _navigateToPostSession = MutableSharedFlow<Unit>()
+    val navigateToPostSession: SharedFlow<Unit> = _navigateToPostSession
+
     fun loadWorkout(workoutId: String) {
         val workout = memberRepository.getSelectedWorkout(workoutId)
-        Log.e("workout", "${workout}")
-        Log.e("workout counter", "${workout?.exerciseEntryInProgress?.counter}")
         _currentWorkout.value = workout
 
         _provider.value = workout?._program?.providerId?.let { memberRepository.getProvider(it) }
@@ -106,14 +109,11 @@ class WorkoutDetailViewModel @Inject constructor(
         val frameCount = inProgress?.counter ?: 0
         val totalMillis =  frameCount*(1000/30)
         _timerValueMillis.value = totalMillis
-        Log.e("_timerValueMillis", "${_timerValueMillis.value}")
 
         val fps = 30
         val timePerRepSec = currentExerciseEntry.value!!.timePerRep()
         _repCounter.value = (frameCount / (fps * timePerRepSec)).toFloat()
         val timeIntoCurrentRep = totalMillis % (timePerRepSec*1000)
-        Log.e("_repCounter.value", "${_repCounter.value}")
-        Log.e("timeIntoCurrentRep", "${timeIntoCurrentRep}")
         _timeInCurrentRepMillis.value = timeIntoCurrentRep.toFloat()
 
         _exerciseState.value = inProgress?.exerciseState ?: ExerciseState.setsStart
@@ -153,7 +153,6 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun toNextExercise() {
         val workout = _currentWorkout.value ?: return
-        if (workout.isWorkoutComplete()) return
         val allExercises =
             workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
@@ -176,7 +175,6 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun toNextSet() {
         val workout = _currentWorkout.value ?: return
-        if (workout.isWorkoutComplete()) return
         val allExercises =
             workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
@@ -507,8 +505,9 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun updateWorkout() {
         if (_currentWorkout.value == null) return
-        Log.e("updateWorkout exerciseDuration", "${_timerValueMillis.value}")
-        val exerciseDurationFrames =(_timerValueMillis.value*(30f/1000f)).toInt()
+
+        val exerciseDurationFrames = (_timerValueMillis.value * (30f / 1000f)).toInt()
+
         viewModelScope.launch {
             val updatedEntryInProgress = ExerciseEntryInProgress(
                 currentEntry = currentExerciseEntry.value,
@@ -518,8 +517,34 @@ class WorkoutDetailViewModel @Inject constructor(
                 isPausedBtwnRep = isPausedBtwnRep.value,
                 counter = exerciseDurationFrames
             )
-            Log.e("updatedEntryInProgress", "$exerciseDurationFrames")
-            currentWorkout.value?.let { memberRepository.updateWorkout(it, updatedEntryInProgress) }
+
+            val current = currentWorkout.value ?: return@launch
+
+            val isComplete = current.isWorkoutComplete()
+            val isAlreadySubmitted = current.completedAt != null
+
+            val updatedWorkout = if (isComplete && !isAlreadySubmitted) {
+                val completedAt = (System.currentTimeMillis() / 1000).toInt()
+                val sessionTimeSecs = completedAt - current.startedAt
+                val caloriesBurned = (sessionTimeSecs / 60.0) * 10
+                val effort = 0.5
+
+                current.copy(
+                    completedAt = completedAt,
+                    sessionTimeSecs = sessionTimeSecs,
+                    caloriesBurned = caloriesBurned,
+                    effort = effort
+                )
+            } else {
+                current
+            }
+            memberRepository.updateWorkout(updatedWorkout, updatedEntryInProgress)
+            if (isComplete && !isAlreadySubmitted) {
+                delay(1000)
+                _navigateToPostSession.emit(Unit)
+            }
         }
     }
+
+
 }

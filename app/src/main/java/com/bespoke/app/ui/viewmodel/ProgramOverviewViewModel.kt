@@ -28,13 +28,10 @@ class ProgramOverviewViewModel @Inject constructor(
     fun getEquipmentLabelById(id: String) = memberRepository.getEquipmentLabelById(id)
 
     fun loadProgramData(programId: String) {
-        Log.e("programId", "${programId}")
         val loadedProgram = memberRepository.programs.value.firstOrNull { it.id == programId }
-        memberRepository.programs.value.forEach {
-            Log.e("loadedProgram", "${it.id}")
-        }
         loadedProgram?.let {
             viewModelScope.launch {
+                memberRepository.loadEquipmentsIfNeeded()
                 val updatedProgram = memberRepository.loadExerciseData(it)
                 _program.value = updatedProgram
             }

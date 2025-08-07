@@ -111,6 +111,13 @@ fun WorkoutDetailScreen(
     LaunchedEffect(workoutId) { viewModel.loadWorkout(workoutId) }
     LaunchedEffect(currentExercise) { viewModel.loadMediaUrlsIfNeeded() }
 
+    LaunchedEffect(Unit) {
+        viewModel.navigateToPostSession.collect {
+            navController.popBackStack()
+            navController.navigate(Screen.WORKOUT_POST_SESSION)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

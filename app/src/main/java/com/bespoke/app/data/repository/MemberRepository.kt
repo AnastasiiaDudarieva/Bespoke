@@ -74,15 +74,17 @@ class MemberRepository @Inject constructor(
 
     private var selectedProgram: Program? = null
     private var selectedExercise: ExerciseEntry? = null
-    private var selectedWorkout: Workout? = null
-
+    private val _selectedWorkout = MutableStateFlow<Workout?>(null)
+    val selectedWorkout: StateFlow<Workout?> = _selectedWorkout
     init {
         currentUserId()?.let { uid ->
             CoroutineScope(Dispatchers.IO).launch {
                 loadMemberById(uid)
             }
         }
-        loadEquipments()
+        CoroutineScope(Dispatchers.IO).launch {
+            loadEquipmentsIfNeeded()
+        }
         listenToProviders()
     }
 
@@ -110,20 +112,18 @@ class MemberRepository @Inject constructor(
         }
     }
 
-    private fun loadEquipments() {
-        if (equipments.isNotEmpty())
-            return
-        firestore
-            .collection("equipments")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                equipments = snapshot.documents.mapNotNull {
-                    it.toObject(Equipment::class.java)
-                }.sortedBy { it.label }
-            }
-            .addOnFailureListener {
-                Log.e("loadEquipments", "Error loading equipments: ${it.message}")
-            }
+
+    suspend fun loadEquipmentsIfNeeded() {
+        if (equipments.isNotEmpty()) return
+        try {
+            val snapshot = firestore.collection("equipments").get().await()
+            equipments = snapshot.documents.mapNotNull {
+                it.toObject(Equipment::class.java)
+            }.sortedBy { it.label }
+            Log.d("Equipment", "Loaded ${equipments.size} equipments")
+        } catch (e: Exception) {
+            Log.e("Equipment", "Failed to load equipment", e)
+        }
     }
 
     private fun listenToProviders() {
@@ -400,8 +400,8 @@ class MemberRepository @Inject constructor(
 
     suspend fun loadWorkoutData(workout: Workout) {
         val storedWorkout = workouts.value.firstOrNull { it.id == workout.id }
-        selectedWorkout = storedWorkout ?: workout
-        selectedWorkout?._program?.sections?.flatMap { section -> section.entries.orEmpty() }
+        _selectedWorkout.value = storedWorkout ?: workout
+        _selectedWorkout.value?._program?.sections?.flatMap { section -> section.entries.orEmpty() }
             ?.map { entry ->
                 val media = entry.exerciseMedia?.firstOrNull { it.kind == "video" }
                 media?.path?.let { path ->
@@ -419,9 +419,12 @@ class MemberRepository @Inject constructor(
     }
 
     fun getSelectedWorkout(workoutId: String): Workout? {
-        if (selectedWorkout != null && selectedWorkout?.id == workoutId)
-            return selectedWorkout
-        return workouts.value.firstOrNull { it.id == workoutId }
+        val workout = _selectedWorkout.value
+        if (workout != null && workout.id == workoutId)
+            return workout
+        val newWorkout = workouts.value.firstOrNull { it.id == workoutId }
+        _selectedWorkout.value = newWorkout
+        return newWorkout
     }
 
     fun getProvider(providerId: String): Provider? {
@@ -473,33 +476,15 @@ class MemberRepository @Inject constructor(
 
         val updatedCompletedEntries = workout.completedExerciseEntries.toMutableMap()
 
-
-        var completedAt = workout.completedAt
-        var sessionTimeSecs = workout.sessionTimeSecs
-        var caloriesBurned = workout.caloriesBurned
-        var effort = workout.effort
-
-
-        var updatedWorkout = workout.copy(
+        val updatedWorkout = workout.copy(
             exerciseEntryInProgress = entryInProgress,
             completedExerciseEntries = updatedCompletedEntries,
-        )
-        if (updatedWorkout.isWorkoutComplete() && updatedWorkout.completedAt == null) {
-            completedAt = (System.currentTimeMillis() / 1000).toInt()
-            sessionTimeSecs = completedAt - updatedWorkout.startedAt
-            caloriesBurned = (sessionTimeSecs / 60.0) * 10
-            effort = 0.5
-        }
-        updatedWorkout = updatedWorkout.copy(
-            completedAt = completedAt,
-            sessionTimeSecs = sessionTimeSecs,
-            caloriesBurned = caloriesBurned,
-            effort = effort
         )
 
         try {
             workoutRef.set(updatedWorkout, SetOptions.merge()).await()
             Log.d("WorkoutUpdate", "Workout updated successfully via set(merge)")
+            _selectedWorkout.value = updatedWorkout
         } catch (e: Exception) {
             Log.e("WorkoutUpdate", "Failed to update workout", e)
         }
