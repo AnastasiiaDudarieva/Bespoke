@@ -1,5 +1,6 @@
 package com.bespoke.app.ui.screens.components.programs.workout
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -26,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.bespoke.app.R
 import com.bespoke.app.data.model.ExerciseState
+import com.bespoke.app.data.model.timePerRep
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.BorderGrayColor
 import com.bespoke.app.ui.theme.Green
@@ -42,7 +44,7 @@ fun VideoProgress(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewMod
 
     val repCount = viewModel.repCount.collectAsState().value
     val elapsed = viewModel.elapsedSeconds.collectAsState().value
-    val timeCurrentRep = viewModel.timeInCurrentRep.collectAsState().value
+    val timeCurrentRep = viewModel.timeInCurrentRepMillis.collectAsState().value
 
     Box(modifier = modifier.fillMaxWidth()) {
         currentExercise?.let { exercise ->
@@ -54,17 +56,17 @@ fun VideoProgress(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewMod
                                 durationMillis = exercise.time * 1000,
                                 progressTrigger = exercise.time,
                                 isPaused = isPaused,
-                                currentProgressMillis = elapsed,
+                                currentProgressMillis = elapsed * 1000,
                                 progressColor = BespokeBlue
                             )
                         }
 
                         "Reps" -> {
                             PulsingLines(
-                                pausePerRepMillis = viewModel.timePerRepMillis(exercise).toInt(),
+                                pausePerRepMillis = exercise.timePerRep()*1000,
                                 repPauseTrigger = repCount,
                                 isPaused = isPaused,
-                                currentProgressMillis = (timeCurrentRep * 1000).roundToInt()
+                                currentProgressMillis = timeCurrentRep.roundToInt()
                             )
                         }
                     }
@@ -109,7 +111,7 @@ fun PulsingLines(
     val context = LocalContext.current
     val audioPlayer = remember { AudioPlayer(context) }
 
-
+Log.e("pausePerRepMillis", "${pausePerRepMillis}")
     val half = pausePerRepMillis / 2
 
     val initialProgress = remember(pausePerRepMillis, currentProgressMillis) {
@@ -237,32 +239,38 @@ fun ProgressLine(
     isPaused: Boolean,
     currentProgressMillis: Int,
     progressColor: Color = Green,
-    ) {
+) {
     val progress = remember { Animatable(0f) }
     val lastProgress = remember { mutableFloatStateOf(0f) }
-    var isStarted by remember { mutableStateOf(false) }
 
     val initialProgress = remember(durationMillis, currentProgressMillis) {
         if (durationMillis > 0) currentProgressMillis / durationMillis.toFloat() else 0f
     }
-
     LaunchedEffect(Unit) {
-        if (!isStarted && initialProgress > 0f) {
+        if (initialProgress < 1f) {
             progress.snapTo(initialProgress)
             lastProgress.floatValue = progress.value
-            isStarted = true
             progress.animateTo(
-                targetValue = initialProgress,
-                animationSpec = tween(durationMillis = durationMillis, easing = LinearEasing)
+                targetValue = 0f,
+                animationSpec = tween(
+                    durationMillis = (durationMillis * initialProgress).toInt(),
+                    easing = LinearEasing
+                )
             )
         }
     }
 
+    // Ініціалізація (з відновленням прогресу)
+    LaunchedEffect(initialProgress, durationMillis) {
+        progress.snapTo(initialProgress)
+        lastProgress.floatValue = initialProgress
+    }
+
+    // Тригер для запуску з 0
     LaunchedEffect(progressTrigger) {
         if (progressTrigger > 0) {
             progress.snapTo(0f)
             lastProgress.floatValue = 0f
-            isStarted = true
             progress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(durationMillis = durationMillis, easing = LinearEasing)
@@ -270,6 +278,7 @@ fun ProgressLine(
         }
     }
 
+    // Pause / Resume
     LaunchedEffect(isPaused) {
         if (isPaused && progress.isRunning) {
             progress.stop()

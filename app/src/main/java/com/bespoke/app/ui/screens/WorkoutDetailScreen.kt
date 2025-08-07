@@ -476,7 +476,8 @@ private fun getExerciseInfoText(
             else -> ""
         }
 
-        ExerciseState.rest, ExerciseState.preRest -> formatTime(exercise.rest - elapsed)
+        ExerciseState.preRest -> ""
+        ExerciseState.rest -> formatTime(exercise.rest - elapsed)
         ExerciseState.setsStart, ExerciseState.preActive, ExerciseState.setsFinished -> when (exercise.basedType) {
             "Reps" -> "${exercise.reps} Reps" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
             "Time" -> "${exercise.time} Sec" + if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""

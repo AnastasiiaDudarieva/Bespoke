@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bespoke.app.data.model.ExerciseState
+import com.bespoke.app.data.model.timePerRep
 import com.bespoke.app.ui.theme.BeatriceFontFamily
 import com.bespoke.app.ui.theme.BespokeBlue
 import com.bespoke.app.ui.theme.BespokeDarkBlue
@@ -53,7 +54,7 @@ fun TimerPage(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewModel) 
 
     val repCount = viewModel.repCount.collectAsState().value
     val elapsed = viewModel.elapsedSeconds.collectAsState().value
-    val timeCurrentRep = viewModel.timeInCurrentRep.collectAsState().value
+    val timeCurrentRep = viewModel.timeInCurrentRepMillis.collectAsState().value
 
     Box(
         modifier = modifier
@@ -74,7 +75,7 @@ fun TimerPage(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewModel) 
                                 durationMillis = exercise.time * 1000,
                                 progressTrigger = exercise.time,
                                 isPaused = isPaused,
-                                currentProgressMillis = elapsed,
+                                currentProgressMillis = elapsed * 1000,
                                 backgroundColor = BespokeDarkBlue,
                                 progressColor = BespokeBlue
                             )
@@ -92,13 +93,10 @@ fun TimerPage(modifier: Modifier = Modifier, viewModel: WorkoutDetailViewModel) 
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .fillMaxHeight(),
-                                pausePerRepMillis = viewModel.timePerRepMillis(
-                                    exercise
-                                )
-                                    .toInt(),
+                                pausePerRepMillis = exercise.timePerRep()*1000,
                                 repPauseTrigger = repCount,
                                 isPaused = isPaused,
-                                currentProgressMillis = (timeCurrentRep * 1000).roundToInt()
+                                currentProgressMillis = (timeCurrentRep).roundToInt()
                             )
                             state = String.format("%02d", repCount)
                             name = "Rep"
@@ -211,40 +209,28 @@ fun VerticalProgressLine(
     progressColor: Color = Green,
 ) {
     val progress = remember { Animatable(1f) }
-    var stage by remember { mutableIntStateOf(0) }
     val lastProgress = remember { mutableFloatStateOf(1f) }
-    var isStarted by remember { mutableStateOf(false) }
-    var lastTrigger by remember { mutableIntStateOf(0) }
 
     val initialProgress = remember(durationMillis, currentProgressMillis) {
         if (durationMillis > 0) 1f - (currentProgressMillis / durationMillis.toFloat()) else 1f
     }
 
-    LaunchedEffect(Unit) {
-        if (!isStarted && initialProgress < 1f) {
-            progress.snapTo(initialProgress)
-            lastProgress.floatValue = progress.value
-            isStarted = true
-            stage = 1
-            progress.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(
-                    durationMillis = (durationMillis * initialProgress).toInt(),
-                    easing = LinearEasing
-                )
+    LaunchedEffect(initialProgress, durationMillis) {
+        progress.snapTo(initialProgress)
+        lastProgress.floatValue = progress.value
+        progress.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(
+                durationMillis = (durationMillis * initialProgress).toInt(),
+                easing = LinearEasing
             )
-        }
+        )
     }
 
     LaunchedEffect(progressTrigger) {
-        if (progressTrigger > lastTrigger) {
-            lastTrigger = progressTrigger
-            isStarted = true
-            stage = 0
+        if (progressTrigger > 0) {
             progress.snapTo(1f)
             lastProgress.floatValue = 1f
-
-            stage = 1
             progress.animateTo(
                 targetValue = 0f,
                 animationSpec = tween(durationMillis = durationMillis, easing = LinearEasing)
@@ -252,11 +238,12 @@ fun VerticalProgressLine(
         }
     }
 
+    // Pause / Resume
     LaunchedEffect(isPaused) {
         if (isPaused && progress.isRunning) {
             progress.stop()
             lastProgress.floatValue = progress.value
-        } else if (!isPaused && lastProgress.floatValue in 0f..1f && !progress.isRunning) {
+        } else if (!isPaused && lastProgress.floatValue in 0f..1f) {
             val remaining = (lastProgress.floatValue * durationMillis).toInt()
             progress.snapTo(lastProgress.floatValue)
             progress.animateTo(
@@ -274,17 +261,19 @@ fun VerticalProgressLine(
             .drawWithContent {
                 val height = size.height
                 val centerX = size.width / 2
-
                 val progressHeight = height * progress.value
+
                 drawLine(
                     color = progressColor,
                     start = Offset(centerX, height),
                     end = Offset(centerX, height - progressHeight),
-                    strokeWidth = size.width,
+                    strokeWidth = size.width
                 )
             }
     )
 }
+
+
 
 @Composable
 fun PulsingCircle(

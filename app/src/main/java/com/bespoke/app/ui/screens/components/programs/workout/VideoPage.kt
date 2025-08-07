@@ -28,7 +28,7 @@ fun VideoPage(viewModel: WorkoutDetailViewModel){
                 thumbnailUrl = thumbnailUrl,
             )
             if ((isPaused && exerciseState != ExerciseState.setsStart
-                        && viewModel.exerciseDuration == 0) || exerciseState == ExerciseState.rest
+                        && viewModel.elapsedSeconds.value == 0) || exerciseState == ExerciseState.rest
             ) {
                 Box(
                     modifier = Modifier

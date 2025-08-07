@@ -22,11 +22,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.min
 
 
 @HiltViewModel
@@ -50,11 +49,22 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _isPaused = MutableStateFlow(false)
     val isPaused: StateFlow<Boolean> = _isPaused
 
-    private val _timerValue = MutableStateFlow(0)
-    private val timerValue: StateFlow<Int> = _timerValue
+    private val _timerValueMillis = MutableStateFlow(0)
+    val elapsedSeconds: StateFlow<Int> = _timerValueMillis
+        .map { (it / 1000) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    private val _counter = MutableStateFlow(0f)
-    private val counter: StateFlow<Float> = _counter
+    private val _repCounter = MutableStateFlow(0f)
+    val repCount: StateFlow<Int> = combine(
+        _repCounter,
+        exerciseState
+    ) { rawCounter, state ->
+        if (state == ExerciseState.active) {
+            maxOf(1, rawCounter.toInt() + 1)
+        } else {
+            0
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     private val _stateText = MutableStateFlow("")
     val stateText: StateFlow<String> = _stateText
@@ -67,36 +77,55 @@ class WorkoutDetailViewModel @Inject constructor(
     val videoUrl = MutableStateFlow<Uri?>(null)
     val thumbnailUrl = MutableStateFlow<Uri?>(null)
 
-    private val _timeInCurrentRep = MutableStateFlow(0f)
-    val timeInCurrentRep: StateFlow<Float> = _timeInCurrentRep
+    private val _timeInCurrentRepMillis = MutableStateFlow(0f)
+    val timeInCurrentRepMillis: StateFlow<Float> = _timeInCurrentRepMillis
 
-    var exerciseDuration = 0
     private var durationJob: Job? = null
     private var countdownJob: Job? = null
     private var timerJob: Job? = null
     private val preActiveSteps = 6
     private val pausePerRepMillis = 1500L
 
-    val _provider =  MutableStateFlow<Provider?>(null)
+    private val _provider = MutableStateFlow<Provider?>(null)
     val provider: StateFlow<Provider?> = _provider
 
-    val repCount: StateFlow<Int> = combine(
-        counter,
-        exerciseState
-    ) { rawCounter, state ->
-        if (state == ExerciseState.active) {
-            maxOf(1, rawCounter.toInt() + 1)
+    fun loadWorkout(workoutId: String) {
+        val workout = memberRepository.getSelectedWorkout(workoutId)
+        Log.e("workout", "${workout}")
+        Log.e("workout counter", "${workout?.exerciseEntryInProgress?.counter}")
+        _currentWorkout.value = workout
+
+        _provider.value = workout?._program?.providerId?.let { memberRepository.getProvider(it) }
+
+        val inProgress = workout?.exerciseEntryInProgress
+        _currentExerciseEntry.value = inProgress?.currentEntry
+        _currentSet.value = inProgress?.currentSet ?: 1
+        _isPaused.value = inProgress?.isPaused ?: false
+        _isPausedBtwnRep.value = inProgress?.isPausedBtwnRep ?: false
+
+        val frameCount = inProgress?.counter ?: 0
+        val totalMillis =  frameCount*(1000/30)
+        _timerValueMillis.value = totalMillis
+        Log.e("_timerValueMillis", "${_timerValueMillis.value}")
+
+        val fps = 30
+        val timePerRepSec = currentExerciseEntry.value!!.timePerRep()
+        _repCounter.value = (frameCount / (fps * timePerRepSec)).toFloat()
+        val timeIntoCurrentRep = totalMillis % (timePerRepSec*1000)
+        Log.e("_repCounter.value", "${_repCounter.value}")
+        Log.e("timeIntoCurrentRep", "${timeIntoCurrentRep}")
+        _timeInCurrentRepMillis.value = timeIntoCurrentRep.toFloat()
+
+        _exerciseState.value = inProgress?.exerciseState ?: ExerciseState.setsStart
+
+        if (inProgress?.exerciseState != null && inProgress.isPaused == false) {
+            startState(inProgress.exerciseState)
         } else {
-            0
+            if (inProgress?.isPaused == true)
+                _stateText.value = ""
+            else
+                updateStateText()
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
-
-    val elapsedSeconds: StateFlow<Int> = timerValue
-
-    fun timePerRepMillis(exercise: ExerciseEntry): Long {
-        val totalTime = exercise.time
-        val reps = exercise.reps
-        return ((totalTime.toFloat() / reps) * 1000).toLong()
     }
 
 
@@ -124,7 +153,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun toNextExercise() {
         val workout = _currentWorkout.value ?: return
-        if(workout.isWorkoutComplete())return
+        if (workout.isWorkoutComplete()) return
         val allExercises =
             workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
@@ -138,8 +167,6 @@ class WorkoutDetailViewModel @Inject constructor(
         if (currentIndex + 1 < allExercises.size) {
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
-            exerciseDuration = 0
-            startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
         } else {
             startState(ExerciseState.setsFinished)
@@ -149,7 +176,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun toNextSet() {
         val workout = _currentWorkout.value ?: return
-        if(workout.isWorkoutComplete())return
+        if (workout.isWorkoutComplete()) return
         val allExercises =
             workout._program?.sections?.flatMap { it.entries ?: emptyList() } ?: return
         val current = _currentExerciseEntry.value ?: return
@@ -167,8 +194,6 @@ class WorkoutDetailViewModel @Inject constructor(
             saveSkippedSet()
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
-            exerciseDuration = 0
-            startExerciseDurationTimer()
             startState(ExerciseState.setsStart)
         } else {
             _exerciseState.value = ExerciseState.setsFinished
@@ -188,9 +213,9 @@ class WorkoutDetailViewModel @Inject constructor(
             when (basedType) {
                 "Time" -> {
                     val totalTimeSec = exercise.time
-                    while (!_isPaused.value && _timerValue.value < totalTimeSec) {
+                    while (!_isPaused.value && _timerValueMillis.value < totalTimeSec * 1000) {
                         delay(1000)
-                        _timerValue.value += 1
+                        _timerValueMillis.value += 1000
                     }
                     if (!_isPaused.value) {
                         startState(ExerciseState.preRest)
@@ -199,21 +224,47 @@ class WorkoutDetailViewModel @Inject constructor(
 
                 "Reps" -> {
                     val reps = exercise.reps
-                    val timePerRep = timePerRepMillis(exercise)
+                    val timePerRep = exercise.timePerRep() * 1000 // мс
+                    val wasBtwnRep = _isPausedBtwnRep.value
 
-                    var currentRep = _counter.value.toInt() + 1
+                    val rawProgress = _repCounter.value
+                    var currentRep = rawProgress.toInt() + 1
+                    var remainingInCurrentRep = ((1f - (rawProgress % 1f)) * timePerRep).toLong()
+
+                    if (wasBtwnRep) {
+                        _isPausedBtwnRep.value = true
+                        var pauseElapsed = 0L
+                        while (pauseElapsed < pausePerRepMillis && !_isPaused.value) {
+                            delay(500)
+                            pauseElapsed += 500
+                        }
+                        _isPausedBtwnRep.value = false
+                    }
 
                     while (currentRep <= reps && !_isPaused.value) {
-                        delay(timePerRep)
+                        var elapsedForThisRep = 0L
+                        while (elapsedForThisRep < remainingInCurrentRep && !_isPaused.value) {
+                            delay(500)
+                            elapsedForThisRep += 500
+                            _timerValueMillis.value += 500
+                        }
                         if (_isPaused.value) break
 
-                        _isPausedBtwnRep.value = true
-                        delay(pausePerRepMillis)
-                        _isPausedBtwnRep.value = false
-                        if (_isPaused.value) break
+                        _repCounter.value = currentRep.toFloat()
 
-                        _counter.value = currentRep.toFloat()
+                        if (currentRep < reps) {
+                            _isPausedBtwnRep.value = true
+                            var pauseElapsed = 0L
+                            while (pauseElapsed < pausePerRepMillis && !_isPaused.value) {
+                                delay(500)
+                                pauseElapsed += 500
+                            }
+                            _isPausedBtwnRep.value = false
+                            if (_isPaused.value) break
+                        }
+
                         currentRep++
+                        remainingInCurrentRep = timePerRep.toLong()
                     }
 
                     if (!_isPaused.value && currentRep > reps) {
@@ -221,11 +272,12 @@ class WorkoutDetailViewModel @Inject constructor(
                     }
                 }
 
+
                 else -> {
                     val totalTimeSec = 30
-                    while (!_isPaused.value && _timerValue.value < totalTimeSec) {
+                    while (!_isPaused.value && _timerValueMillis.value < totalTimeSec*1000) {
                         delay(1000)
-                        _timerValue.value += 1
+                        _timerValueMillis.value += 1000
                     }
                     if (!_isPaused.value) {
                         startState(ExerciseState.preRest)
@@ -241,66 +293,15 @@ class WorkoutDetailViewModel @Inject constructor(
 
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
-            while (_timerValue.value < restSeconds) {
+            while (_timerValueMillis.value < restSeconds*1000) {
                 while (_isPaused.value) delay(100)
                 delay(1000)
-                _timerValue.value += 1
+                _timerValueMillis.value += 1000
             }
             startState(ExerciseState.preActive)
         }
     }
 
-    fun loadWorkout(workoutId: String) {
-        val workout = memberRepository.getSelectedWorkout(workoutId)
-        Log.e("workout", "${workout}")
-        _currentWorkout.value = workout
-
-        _provider.value = workout?._program?.providerId?.let { memberRepository.getProvider(it) }
-
-        val inProgress = workout?.exerciseEntryInProgress
-        _currentExerciseEntry.value = inProgress?.currentEntry
-        _currentSet.value = inProgress?.currentSet ?: 1
-        _isPaused.value = inProgress?.isPaused ?: false
-        _isPausedBtwnRep.value = inProgress?.isPausedBtwnRep ?: false
-
-        val frameCount = inProgress?.counter ?: 0
-        val totalSeconds = frameCount / 30f
-        _timerValue.value = totalSeconds.toInt()
-
-        val reps = _currentExerciseEntry.value?.reps ?: 1
-        val timePerRep = _currentExerciseEntry.value?.timePerRep()?.toFloat() ?: 1f
-
-        _counter.value = min((totalSeconds / timePerRep), reps.toFloat())
-        val timeIntoCurrentRep = totalSeconds % timePerRep
-        _timeInCurrentRep.value = timeIntoCurrentRep
-
-        _exerciseState.value = inProgress?.exerciseState ?: ExerciseState.setsStart
-        exerciseDuration = inProgress?.counter ?: 0
-
-        if (inProgress?.exerciseState != null && inProgress.isPaused == false) {
-            startState(inProgress.exerciseState)
-            if (inProgress.exerciseState == ExerciseState.active) {
-                startExerciseDurationTimer()
-            }
-        } else {
-            if (inProgress?.isPaused == true)
-                _stateText.value = ""
-            else
-                updateStateText()
-        }
-    }
-
-    private fun startExerciseDurationTimer() {
-        durationJob?.cancel()
-        durationJob = viewModelScope.launch {
-            while (isActive) {
-                delay(1000L / 30)
-                if (!_isPaused.value && _exerciseState.value == ExerciseState.active) {
-                    exerciseDuration++
-                }
-            }
-        }
-    }
 
     private fun startState(state: ExerciseState) {
         _exerciseState.value = state
@@ -336,7 +337,7 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun startRestState() {
         _stateText.value = "Recover"
-        _timerValue.value = 0
+        _timerValueMillis.value = 0
         val current = _currentExerciseEntry.value ?: return
         val workout = _currentWorkout.value
         val allExercises =
@@ -348,8 +349,6 @@ class WorkoutDetailViewModel @Inject constructor(
         } else if (currentIndex + 1 < allExercises.size) {
             _currentExerciseEntry.value = allExercises[currentIndex + 1]
             _currentSet.value = 1
-            exerciseDuration = 0
-            startExerciseDurationTimer()
         } else {
             startState(ExerciseState.setsFinished)
             saveFinishedSet()
@@ -359,10 +358,10 @@ class WorkoutDetailViewModel @Inject constructor(
         val restSeconds = _currentExerciseEntry.value?.rest ?: 3
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
-            while (_timerValue.value < restSeconds) {
+            while (_timerValueMillis.value < restSeconds*1000) {
                 while (_isPaused.value) delay(100)
                 delay(1000)
-                _timerValue.value += 1
+                _timerValueMillis.value += 1000
             }
             startState(ExerciseState.preActive)
         }
@@ -416,51 +415,11 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun startActiveTimer() {
         timerJob?.cancel()
-        _timerValue.value = 0
-        _counter.value = 0f
+        _timerValueMillis.value = 0
+        _repCounter.value = 0f
+        resumeActive()
 
-        val exercise = _currentExerciseEntry.value ?: return
-        val basedType = exercise.basedType
 
-        timerJob = viewModelScope.launch {
-            when (basedType) {
-                "Time" -> {
-                    val totalTime = exercise.time
-                    while (_timerValue.value < totalTime) {
-                        while (_isPaused.value) delay(100)
-                        delay(1000)
-                        _timerValue.value += 1
-                    }
-                    startState(ExerciseState.preRest)
-                }
-
-                "Reps" -> {
-                    val reps = exercise.reps
-                    val timePerRep = timePerRepMillis(exercise)
-
-                    for (rep in 1..reps) {
-                        while (_isPaused.value) delay(100)
-                        delay(timePerRep)
-                        while (_isPaused.value) delay(100)
-                        _isPausedBtwnRep.value = true
-                        delay(pausePerRepMillis)
-                        _isPausedBtwnRep.value = false
-                        _counter.value = rep.toFloat()
-                    }
-                    startState(ExerciseState.preRest)
-                }
-
-                else -> {
-                    val fallbackTime = 30
-                    while (_timerValue.value < fallbackTime) {
-                        while (_isPaused.value) delay(100)
-                        delay(1000)
-                        _timerValue.value += 1
-                    }
-                    startState(ExerciseState.preRest)
-                }
-            }
-        }
     }
 
     fun loadMediaUrlsIfNeeded() {
@@ -547,6 +506,9 @@ class WorkoutDetailViewModel @Inject constructor(
 
 
     fun updateWorkout() {
+        if (_currentWorkout.value == null) return
+        Log.e("updateWorkout exerciseDuration", "${_timerValueMillis.value}")
+        val exerciseDurationFrames =(_timerValueMillis.value*(30f/1000f)).toInt()
         viewModelScope.launch {
             val updatedEntryInProgress = ExerciseEntryInProgress(
                 currentEntry = currentExerciseEntry.value,
@@ -554,8 +516,9 @@ class WorkoutDetailViewModel @Inject constructor(
                 currentSet = currentSet.value,
                 isPaused = isPaused.value,
                 isPausedBtwnRep = isPausedBtwnRep.value,
-                counter = exerciseDuration
+                counter = exerciseDurationFrames
             )
+            Log.e("updatedEntryInProgress", "$exerciseDurationFrames")
             currentWorkout.value?.let { memberRepository.updateWorkout(it, updatedEntryInProgress) }
         }
     }
