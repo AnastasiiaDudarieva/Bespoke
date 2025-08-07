@@ -196,9 +196,12 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+
                 ClickableUnderlinedText(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                     text = stringResource(R.string.settings),
                     onClick = { navController.navigate(Screen.SETTINGS) })
+
             }
         }
 

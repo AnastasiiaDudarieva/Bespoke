@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bespoke.app.R
 import com.bespoke.app.navigation.Screen
@@ -45,6 +47,21 @@ fun MemberRootScreen(
 
     var currentTab: TabItem by remember { mutableStateOf(TabItem.Home) }
 
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStackEntry?.destination?.route
+
+    LaunchedEffect(currentDestination) {
+        currentTab = when {
+            currentDestination?.startsWith(Screen.PROGRAMS) == true ||
+                    currentDestination?.startsWith(Screen.PROGRAM_OVERVIEW) == true ||
+                    currentDestination?.startsWith(Screen.WORKOUT) == true -> TabItem.Programs
+
+            currentDestination?.startsWith(Screen.PROFILE) == true -> TabItem.Home
+
+            else -> currentTab
+        }
+    }
+
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = NavBarBackgroundColor) {
@@ -56,31 +73,37 @@ fun MemberRootScreen(
                 ).forEach { tab ->
                     NavigationBarItem(
                         selected = currentTab == tab,
-                        onClick = { currentTab = tab },
+                        onClick = {
+                            currentTab = tab
+                            when (tab) {
+                                TabItem.Home -> navController.navigate(Screen.MEMBER_ROOT) {
+                                    popUpTo(Screen.MEMBER_ROOT) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                                TabItem.Programs -> navController.navigate(Screen.PROGRAMS) {
+                                    popUpTo(Screen.MEMBER_ROOT) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                else -> { /* handle other tabs if needed */ }
+                            }
+                        },
                         icon = {
                             Icon(
                                 painter = painterResource(id = tab.iconRes),
                                 contentDescription = tab.label,
-                                tint = if (currentTab == tab) {
-                                    BespokeBlue
-                                } else {
-                                    TextDark
-                                }
+                                tint = if (currentTab == tab) BespokeBlue else TextDark
                             )
                         },
                         label = {
                             Text(
                                 text = tab.label,
-                                color = if (currentTab == tab) {
-                                    BespokeBlue
-                                } else {
-                                    TextDark
-                                },
+                                color = if (currentTab == tab) BespokeBlue else TextDark,
                                 fontFamily = BeatriceFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 10.sp
                             )
-                        }, colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                        },
+                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                             indicatorColor = Color.Transparent
                         )
                     )
@@ -95,9 +118,17 @@ fun MemberRootScreen(
         ) {
             when (currentTab) {
                 is TabItem.Home -> HomeScreen(navController)
-                is TabItem.Schedule -> Text(modifier = Modifier.fillMaxSize(),text = "Schedule", textAlign = TextAlign.Center)
+                is TabItem.Schedule -> Text(
+                    modifier = Modifier.fillMaxSize(),
+                    text = "Schedule",
+                    textAlign = TextAlign.Center
+                )
                 is TabItem.Programs -> ProgramsScreen(navController)
-                is TabItem.Guidance -> Text(modifier = Modifier.fillMaxSize(), text = "Guidance", textAlign = TextAlign.Center)
+                is TabItem.Guidance -> Text(
+                    modifier = Modifier.fillMaxSize(),
+                    text = "Guidance",
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
