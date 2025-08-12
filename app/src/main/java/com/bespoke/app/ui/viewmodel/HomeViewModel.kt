@@ -32,7 +32,7 @@ class HomeViewModel @Inject constructor(
                     val completedPrograms =
                         pastWorkouts.count { it.didComplete }
                     val totalCalories =
-                        pastWorkouts.sumOf { it.calloriesBurned }
+                        pastWorkouts.sumOf { it.caloriesBurned }
                             .roundToInt()
 
                     val statistics = Statistics(

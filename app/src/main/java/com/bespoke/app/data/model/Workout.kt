@@ -26,6 +26,7 @@ data class Workout(
 )
 
 data class ExerciseFeedback(
+    var exerciseId: String?=null,
     var textMessage: String = "",
     var media: List<Media> = emptyList(),
     var status: String? = null,

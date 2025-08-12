@@ -139,12 +139,16 @@ fun WorkoutDetailScreen(
                 },
                 onAvatarClick = {
                     currentExercise?.let {
+                        if (!isPaused) viewModel.togglePause()
+                        viewModel.updateWorkout()
                         viewModel.selectExercise(it)
                         navController.navigate("${Screen.EXERCISE}?exerciseId=${it.id}")
                     }
                 },
                 onMoreClick = {
                     workout?.programId?.let { id ->
+                        if (!isPaused) viewModel.togglePause()
+                        viewModel.updateWorkout()
                         navController.navigate("${Screen.PROGRAM_OVERVIEW_SIMPLE}?programId=$id")
                     }
                 }
@@ -221,6 +225,8 @@ fun WorkoutDetailScreen(
                         onClick = {
                             currentExercise?.let {
                                 viewModel.selectExercise(it)
+                                if (!isPaused) viewModel.togglePause()
+                                viewModel.updateWorkout()
                                 navController.navigate("${Screen.EXERCISE}?exerciseId=${it.id}")
                             }
                         },

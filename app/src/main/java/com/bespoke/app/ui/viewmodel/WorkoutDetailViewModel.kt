@@ -450,35 +450,38 @@ class WorkoutDetailViewModel @Inject constructor(
 
     private fun saveFinishedSet() {
         val workout = _currentWorkout.value ?: return
-        val exerciseId = _currentExerciseEntry.value?.id ?: return
+        val id = _currentExerciseEntry.value?.id ?: return
+        val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
         val currentSet = _currentSet.value
 
-        val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
+        val feedback = workout.completedExerciseEntries[id] ?: ExerciseFeedback(exerciseId = exerciseId)
         val updatedFinishedSets = feedback.finishedSets.toMutableSet()
         updatedFinishedSets.add(currentSet)
 
         val updatedFeedback = feedback.copy(finishedSets = updatedFinishedSets.toList())
-        updateExerciseFeedback(exerciseId, updatedFeedback)
+        updateExerciseFeedback(id, updatedFeedback)
     }
 
     private fun saveSkippedSet() {
         val workout = _currentWorkout.value ?: return
-        val exerciseId = _currentExerciseEntry.value?.id ?: return
+        val id = _currentExerciseEntry.value?.id ?: return
+        val exerciseId = _currentExerciseEntry.value?.exerciseId ?: return
         val currentSet = _currentSet.value
-        val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
+        val feedback = workout.completedExerciseEntries[id] ?: ExerciseFeedback(exerciseId = exerciseId)
         val updatedSkippedSets = feedback.skipedSets.toMutableSet()
         updatedSkippedSets.add(currentSet)
         val updatedFeedback = feedback.copy(skipedSets = updatedSkippedSets.toList())
-        updateExerciseFeedback(exerciseId, updatedFeedback)
+        updateExerciseFeedback(id, updatedFeedback)
     }
 
     private fun saveSkippedExercise() {
         val workout = _currentWorkout.value ?: return
         val entry = _currentExerciseEntry.value ?: return
-        val exerciseId = entry.id ?: ""
+        val id = entry.id ?: return
+        val exerciseId = entry.exerciseId ?: return
         val currentSet = _currentSet.value
 
-        val feedback = workout.completedExerciseEntries[exerciseId] ?: ExerciseFeedback()
+        val feedback = workout.completedExerciseEntries[id] ?: ExerciseFeedback(exerciseId = exerciseId)
         val skippedSets = feedback.skipedSets.toMutableSet()
 
         if (!skippedSets.contains(currentSet))

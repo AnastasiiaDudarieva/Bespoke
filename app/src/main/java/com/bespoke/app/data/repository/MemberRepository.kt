@@ -13,12 +13,14 @@ import com.bespoke.app.data.model.Program
 import com.bespoke.app.data.model.Provider
 import com.bespoke.app.data.model.StreakDataStats
 import com.bespoke.app.data.model.Workout
-import com.bespoke.app.data.model.isWorkoutComplete
 import com.bespoke.app.data.model.requiredWorkoutDays
 import com.bespoke.app.data.services.AuthService
 import com.bespoke.app.utils.FirebaseStorageUrlCache
+import com.bespoke.app.utils.atStartOfDayEpochSec
 import com.bespoke.app.utils.getFirebaseDownloadUrl
+import com.bespoke.app.utils.secToLocalDate
 import com.bespoke.app.utils.toStartOfDay
+import com.bespoke.app.utils.zone
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.output.ByteArrayOutputStream
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -32,6 +34,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Date
@@ -76,6 +81,7 @@ class MemberRepository @Inject constructor(
     private var selectedExercise: ExerciseEntry? = null
     private val _selectedWorkout = MutableStateFlow<Workout?>(null)
     val selectedWorkout: StateFlow<Workout?> = _selectedWorkout
+
     init {
         currentUserId()?.let { uid ->
             CoroutineScope(Dispatchers.IO).launch {
@@ -142,6 +148,7 @@ class MemberRepository @Inject constructor(
                 _providers.value = providerList
             }
     }
+
     fun getEquipmentLabelById(id: String): String? {
         return equipments.firstOrNull { it.id == id }?.label
     }
@@ -169,18 +176,6 @@ class MemberRepository @Inject constructor(
         return storageRef.downloadUrl.await().toString()
     }
 
-    suspend fun updateMemberAvatar(newAvatarUrl: String) {
-        val currentUser = auth.currentUserId() ?: return
-        val memberRef = firestore.collection("members").document(currentUser)
-        try {
-            memberRef.update("avatar", newAvatarUrl).await()
-            val updatedSnapshot = memberRef.get().await()
-            val updatedMember = updatedSnapshot.toObject(Member::class.java)
-            _member.emit(updatedMember)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 
     private fun startListeningForMemberChanges(userId: String) {
         memberListener?.remove()
@@ -222,6 +217,7 @@ class MemberRepository @Inject constructor(
                 snapshot?.let {
                     val result =
                         it.documents.mapNotNull { doc ->
+                            Log.e("workout", "${doc}")
                             doc.toObject(Workout::class.java)
                         }
                     _workouts.value = result.sortedBy { workout -> workout.startedAt }
@@ -301,36 +297,51 @@ class MemberRepository @Inject constructor(
         return StreakDataStats(dateStats, longestStreak = longest, currentStreak = current)
     }
 
+    private fun isDateInToday(epochSeconds: Int): Boolean {
+        val zone = ZoneId.systemDefault()
+        val d = Instant.ofEpochSecond(epochSeconds.toLong()).atZone(zone).toLocalDate()
+        return d == LocalDate.now(zone)
+    }
 
     private fun calculatePastWorkouts() {
         val published = programs.value.filter { it.status == Program.Status.PUBLISHED.value }
         val workouts = completedWorkouts
+
         val pastList = mutableListOf<PastWorkout>()
+
         for (program in published) {
-            val requiredDates = program.requiredWorkoutDays()
+            val requiredDates: List<Date> = program.requiredWorkoutDays()
+
             for (date in requiredDates) {
-                val didComplete = workouts.any {
+                val reqDay = date.toInstant().atZone(zone).toLocalDate()
+
+                val itemsForDay = workouts.filter {
                     it.programId == program.id &&
-                            Date(it.completedAt!! * 1000L).toStartOfDay() == date.toStartOfDay()
+                            it.completedAt != null &&
+                            it.completedAt!!.toLong().secToLocalDate() == reqDay
                 }
 
-                val caloriesBurned = workouts.filter {
-                    it.programId == program.id &&
-                            Date(it.completedAt!! * 1000L).toStartOfDay() == date.toStartOfDay()
-                }.sumOf { it.caloriesBurned }
-                pastList.add(
-                    PastWorkout(
-                        completedAt = (date.time / 1000L).toInt(),
-                        program = program,
-                        didComplete = didComplete,
-                        calloriesBurned = caloriesBurned
-                    )
+                pastList += PastWorkout(
+                    completedAt = date.atStartOfDayEpochSec(),
+                    program = program,
+                    didComplete = itemsForDay.isNotEmpty(),
+                    caloriesBurned = itemsForDay.sumOf { it.caloriesBurned }
                 )
             }
         }
 
-        _pastWorkouts.value = pastList.sortedBy { it.completedAt }
+        val programIndex = published.mapIndexed { idx, p -> p.id to idx }.toMap()
+        _pastWorkouts.value = pastList.sortedWith(
+            compareBy<PastWorkout> { it.completedAt }
+                .thenBy { programIndex[it.program.id] ?: Int.MAX_VALUE }
+                .thenBy { it.program.id ?: "" }
+        )
     }
+
+
+    val pastWorkoutsWithoutToday: List<PastWorkout>
+        get() = _pastWorkouts.value.filter { !isDateInToday(it.completedAt) }
+
 
     suspend fun loadExerciseData(program: Program): Program {
         selectedProgram?.let {
@@ -428,7 +439,7 @@ class MemberRepository @Inject constructor(
     }
 
     fun getProvider(providerId: String): Provider? {
-       return providers.value.firstOrNull { it.id == providerId }
+        return providers.value.firstOrNull { it.id == providerId }
     }
 
     suspend fun startWorkout(program: Program): Workout {
@@ -450,16 +461,17 @@ class MemberRepository @Inject constructor(
         val memberId = currentUserId()
             ?: throw IllegalStateException("Member not loaded")
 
-        val workoutsRef = firestore
+
+        val ref = firestore
             .collection("members")
             .document(memberId)
             .collection("workouts")
+            .document()
 
-        val documentRef = workoutsRef.add(workout).await()
-        val result = workout.copy(id = documentRef.id)
-
-        loadWorkoutData(result)
-        return result
+        val withId = workout.copy(id = ref.id)
+        ref.set(withId).await()
+        loadWorkoutData(withId)
+        return withId
     }
 
     suspend fun updateWorkout(

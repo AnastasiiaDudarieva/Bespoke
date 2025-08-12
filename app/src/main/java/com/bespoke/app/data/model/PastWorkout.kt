@@ -6,7 +6,7 @@ data class PastWorkout(
     val completedAt: Int,
     val program: Program,
     val didComplete: Boolean,
-    val calloriesBurned: Double
+    val caloriesBurned: Double
 )
 
 data class StreakDataStats(

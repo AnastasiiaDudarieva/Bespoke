@@ -21,8 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,6 +41,8 @@ import com.bespoke.app.ui.screens.components.programs.TodayWorkoutRow
 import com.bespoke.app.ui.screens.components.programs.UpcomingProgramRow
 import com.bespoke.app.ui.theme.TextDark
 import com.bespoke.app.ui.viewmodel.ProgramsViewModel
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun ProgramsScreen(
@@ -47,23 +52,32 @@ fun ProgramsScreen(
 
     val viewModel: ProgramsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
-    val scrollState = rememberLazyListState()
 
-    val todayProgramsIndex = uiState.pastWorkouts.size
+    val listState = rememberLazyListState()
 
-    LaunchedEffect(uiState.todayPrograms, uiState.todayWorkouts, uiState.todayPrograms) {
-        if (!viewModel.hasScrolledInitially &&
-            (uiState.todayWorkouts.isNotEmpty() || uiState.todayPrograms.isNotEmpty())
-        ) {
-            scrollState.scrollToItem(todayProgramsIndex, scrollOffset = 32)
-            viewModel.hasScrolledInitially = true
-        }
+    val targetIndex = remember(
+        uiState.pastWorkouts.size,
+        uiState.todayWorkouts.size,
+        uiState.todayPrograms.size
+    ) {
+        if (uiState.todayWorkouts.isEmpty() && uiState.todayPrograms.isEmpty()) null
+        else uiState.pastWorkouts.size
+    }
+
+    LaunchedEffect(targetIndex) {
+        val index = targetIndex ?: return@LaunchedEffect
+        if (viewModel.hasScrolledInitially) return@LaunchedEffect
+
+        snapshotFlow { listState.layoutInfo.totalItemsCount }
+            .filter { it > index }
+            .first()
+
+        listState.scrollToItem(index, scrollOffset = 32)
+        viewModel.hasScrolledInitially = true
     }
 
 
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         Column {
             BespokeTopBar(
                 title = stringResource(R.string.programs),
@@ -72,11 +86,10 @@ fun ProgramsScreen(
             )
             HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
 
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 24.dp, horizontal = 24.dp),
-                state = scrollState
+                state = listState
             ) {
                 itemsIndexed(uiState.pastWorkouts) { _, pastWorkout ->
                     PastWorkoutRow(

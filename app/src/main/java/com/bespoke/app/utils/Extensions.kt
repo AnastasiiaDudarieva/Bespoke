@@ -5,12 +5,16 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 
 fun String.isValidEmail(): Boolean {
     return android.util.Patterns.EMAIL_ADDRESS.matcher(this).matches()
 }
+
 fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier =
     composed {
         clickable(
@@ -48,16 +52,23 @@ fun Date.toStartOfDay(): Date {
     cal.set(Calendar.MILLISECOND, 0)
     return cal.time
 }
+
 fun Calendar.getDayName(): String {
     return when (get(Calendar.DAY_OF_WEEK)) {
-        Calendar.SUNDAY    -> "sun"
-        Calendar.MONDAY    -> "mon"
-        Calendar.TUESDAY   -> "tue"
+        Calendar.SUNDAY -> "sun"
+        Calendar.MONDAY -> "mon"
+        Calendar.TUESDAY -> "tue"
         Calendar.WEDNESDAY -> "wed"
-        Calendar.THURSDAY  -> "thu"
-        Calendar.FRIDAY    -> "fri"
-        Calendar.SATURDAY  -> "sat"
-        else               -> "unknown"
+        Calendar.THURSDAY -> "thu"
+        Calendar.FRIDAY -> "fri"
+        Calendar.SATURDAY -> "sat"
+        else -> "unknown"
     }
 }
 
+val zone: ZoneId = ZoneId.systemDefault()
+fun Date.atStartOfDayEpochSec(): Int =
+    toInstant().atZone(zone).toLocalDate().atStartOfDay(zone).toEpochSecond().toInt()
+
+fun Long.secToLocalDate(): LocalDate =
+    Instant.ofEpochSecond(this).atZone(zone).toLocalDate()

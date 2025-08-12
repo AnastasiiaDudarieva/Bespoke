@@ -10,10 +10,14 @@ import com.bespoke.app.data.model.Workout
 import com.bespoke.app.data.repository.MemberRepository
 import com.bespoke.app.utils.getDayName
 import com.bespoke.app.utils.toStartOfDay
+import com.bespoke.app.utils.zone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
@@ -43,28 +47,21 @@ class ProgramsViewModel @Inject constructor(
         val publishedPrograms = memberRepository.programs.value
             .filter { it.status == Program.Status.PUBLISHED.value }
 
-        val allWorkouts = memberRepository.completedWorkouts
+        val allCompleted = memberRepository.completedWorkouts
 
-        val today = Date().toStartOfDay()
-        val tomorrow = Calendar.getInstance().apply {
-            time = today
-            add(Calendar.DAY_OF_YEAR, 1)
-        }.time
-
-        val completedWorkoutsToday = allWorkouts.filter {
-            Date(it.completedAt!! * 1000L).toStartOfDay() == today
+        val completedWorkoutsToday = allCompleted.filter { w ->
+            val ts = w.completedAt ?: return@filter false
+            isDateInTodaySec(ts.toLong())
         }
 
-        val inProgressWorkouts = memberRepository.workouts.value.filter {
-            it.completedAt == null || it.effort == null
-        }
+        val inProgressWorkouts = memberRepository.workouts.value.filter { it.completedAt == null }
 
         val todaysWorkouts = completedWorkoutsToday + inProgressWorkouts
 
         val todaysPrograms = publishedPrograms.filter { program ->
             program.days?.contains(todayWeekday()) == true &&
-                    !inProgressWorkouts.any { it.programId == program.id } &&
-                    !completedWorkoutsToday.any { it.programId == program.id }
+                    inProgressWorkouts.none { it.programId == program.id } &&
+                    completedWorkoutsToday.none { it.programId == program.id }
         }
 
         val upcomingPrograms = (1..6).flatMap { offset ->
@@ -74,10 +71,8 @@ class ProgramsViewModel @Inject constructor(
             }
         }
 
-        val pastWorkouts = memberRepository.pastWorkouts.value.filter { workout ->
-            val completedDate = Date(workout.completedAt * 1000L)
-            completedDate.before(today) || completedDate.after(tomorrow)
-        }
+        val pastWorkouts = memberRepository.pastWorkoutsWithoutToday
+
         _uiState.value = ProgramsUiState(
             pastWorkouts = pastWorkouts,
             todayWorkouts = todaysWorkouts,
@@ -85,6 +80,9 @@ class ProgramsViewModel @Inject constructor(
             upcomingPrograms = upcomingPrograms
         )
     }
+
+    private fun isDateInTodaySec(epochSec: Long): Boolean =
+        Instant.ofEpochSecond(epochSec).atZone(zone).toLocalDate() == LocalDate.now(zone)
 
     suspend fun loadProgramData(program: Program) = memberRepository.loadExerciseData(program)
 
