@@ -475,7 +475,7 @@ private fun getExerciseInfoText(
         ExerciseState.active -> when (exercise.basedType) {
             "Time" -> formatTime(exercise.time - elapsed)
             "Reps" -> String.format("%02d", repCount) +
-                    if (exercise.hasWeights) " • ${exercise.weight} kg" else ""
+                    if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
 
             "Time & Reps" -> "${formatTime(exercise.time - elapsed)} • ${exercise.reps} Reps" +
                     if (exercise.hasWeights) " • ${exercise.weight} lbs" else ""
