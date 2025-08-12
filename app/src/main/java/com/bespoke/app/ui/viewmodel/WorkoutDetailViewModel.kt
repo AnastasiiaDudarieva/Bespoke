@@ -121,7 +121,7 @@ class WorkoutDetailViewModel @Inject constructor(
         if (inProgress?.exerciseState != null && inProgress.isPaused == false) {
             startState(inProgress.exerciseState)
         } else {
-            if (inProgress?.isPaused == true)
+            if (inProgress?.isPaused == true && inProgress.exerciseState == ExerciseState.setsStart)
                 _stateText.value = ""
             else
                 updateStateText()
