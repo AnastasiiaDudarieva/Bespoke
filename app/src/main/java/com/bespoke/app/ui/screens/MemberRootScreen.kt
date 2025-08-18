@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -43,7 +44,7 @@ sealed class TabItem(val label: String, @DrawableRes val iconRes: Int) {
 
 @Composable
 fun MemberRootScreen(
-    navController: NavHostController
+    navController: NavHostController,
 ) {
     SetStatusBarIconsDark(darkIcons = true)
 
@@ -67,7 +68,12 @@ fun MemberRootScreen(
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = NavBarBackgroundColor) {
-                listOf(TabItem.Home, TabItem.Schedule, TabItem.Programs, TabItem.Guidance).forEach { tab ->
+                listOf(
+                    TabItem.Home,
+                    TabItem.Schedule,
+                    TabItem.Programs,
+                    TabItem.Guidance
+                ).forEach { tab ->
                     NavigationBarItem(
                         selected = currentTab == tab,
                         onClick = {
@@ -81,7 +87,9 @@ fun MemberRootScreen(
                                 }
                             ) {
                                 launchSingleTop = true
-                                popUpTo(tabNavController.graph.startDestinationId) { saveState = true }
+                                popUpTo(tabNavController.graph.startDestinationId) {
+                                    saveState = true
+                                }
                                 restoreState = true
                             }
                         },
@@ -120,19 +128,27 @@ fun MemberRootScreen(
             ) {
                 composable(Screen.HOME) { HomeScreen(navController) }
                 composable(Screen.SCHEDULE) {
-                    Text(
+                    Box(
                         modifier = Modifier.fillMaxSize(),
-                        text = "Schedule",
-                        textAlign = TextAlign.Center
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Schedule",
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
                 composable(Screen.PROGRAMS) { ProgramsScreen(navController) }
                 composable(Screen.GUIDANCE) {
-                    Text(
+                    Box(
                         modifier = Modifier.fillMaxSize(),
-                        text = "Guidance",
-                        textAlign = TextAlign.Center
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Guidance",
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
