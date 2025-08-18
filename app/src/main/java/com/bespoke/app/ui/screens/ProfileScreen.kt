@@ -189,10 +189,6 @@ fun ProfileScreen(
                 StatsCard(ProfileStatsType.Streak, value = statistic.longestStreak)
                 Spacer(modifier = Modifier.height(8.dp))
                 StatsCard(ProfileStatsType.Programs, value = statistic.completedPrograms)
-                Spacer(modifier = Modifier.height(8.dp))
-                StatsCard(ProfileStatsType.Calories, value = statistic.totalCaloriesBurned)
-                Spacer(modifier = Modifier.height(8.dp))
-                StatsCard(ProfileStatsType.WorkoutTime, value = "1400 Min")
 
                 Spacer(modifier = Modifier.height(32.dp))
 

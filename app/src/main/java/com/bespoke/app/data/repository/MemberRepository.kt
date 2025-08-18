@@ -258,44 +258,54 @@ class MemberRepository @Inject constructor(
         }
     }
 
+
+
     fun getStreakDataStats(): StreakDataStats? {
-        val pastWorkouts = _pastWorkouts.value
+        val past = _pastWorkouts.value.sortedBy { it.completedAt } // гарантуй порядок як в iOS
+        if (past.isEmpty()) return null
 
-        if (pastWorkouts.isEmpty()) return null
+        val zone = com.bespoke.app.utils.zone // або ZoneId.systemDefault()
+        fun Int.secToLocalDate(): LocalDate =
+            Instant.ofEpochSecond(this.toLong()).atZone(zone).toLocalDate()
 
-        val firstDate = Date(pastWorkouts.first().completedAt * 1000L).toStartOfDay()
-        val lastDate = Date(pastWorkouts.last().completedAt * 1000L).toStartOfDay()
+        val first = past.first().completedAt.secToLocalDate()
+        val last  = past.last().completedAt.secToLocalDate()
 
-        val daysBetween =
-            ChronoUnit.DAYS.between(firstDate.toInstant(), lastDate.toInstant()).toInt()
+        // Групуємо по днях для швидкого пошуку
+        val byDay: Map<LocalDate, List<PastWorkout>> = past.groupBy { it.completedAt.secToLocalDate() }
 
         var longest = 0
         var current = 0
         val dateStats = mutableListOf<StreakDataStats.DateIsComplete>()
 
-        for (i in 0..daysBetween) {
-            val date = Calendar.getInstance().apply {
-                time = firstDate
-                add(Calendar.DAY_OF_YEAR, i)
-            }.time
-
-            val workoutsInDay = pastWorkouts.filter {
-                Date(it.completedAt * 1000L).toStartOfDay() == date.toStartOfDay()
+        var d = first
+        while (!d.isAfter(last)) {
+            val todays = byDay[d].orEmpty()
+            if (todays.isEmpty()) {
+                // як в iOS: порожні дні ПРОПУСКАЄМО (не ламають і не збільшують стрік)
+                d = d.plusDays(1)
+                continue
             }
 
-            if (workoutsInDay.all { it.didComplete }) {
-                dateStats.add(StreakDataStats.DateIsComplete(date, true))
-                current++
-            } else {
-                dateStats.add(StreakDataStats.DateIsComplete(date, false))
-                current = 0
-            }
+            val complete = todays.all { it.didComplete }
+            dateStats += StreakDataStats.DateIsComplete(
+                date = Date.from(d.atStartOfDay(zone).toInstant()),
+                isComplete = complete
+            )
 
-            longest = maxOf(longest, current)
+            if (complete) current++ else current = 0
+            if (current > longest) longest = current
+
+            d = d.plusDays(1)
         }
 
-        return StreakDataStats(dateStats, longestStreak = longest, currentStreak = current)
+        return StreakDataStats(
+            dateIsCompleteData = dateStats,
+            longestStreak = longest,
+            currentStreak = current
+        )
     }
+
 
     private fun isDateInToday(epochSeconds: Int): Boolean {
         val zone = ZoneId.systemDefault()
